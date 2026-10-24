@@ -46,6 +46,9 @@ int main(int argc, char** argv) {
         }));
         if (!server.listen({*ip, static_cast<std::uint16_t>(port)}, limits)) throw std::runtime_error(server.error());
         std::signal(SIGINT, stop); std::signal(SIGTERM, stop);
+#ifdef _WIN32
+        std::signal(SIGBREAK, stop);
+#endif
         bool stopping = false;
         const auto monitor = loop.every(std::chrono::milliseconds(25), [&] {
             if (stop_requested && !stopping) { pass(server.shutdown(std::chrono::milliseconds(grace))); stopping = true; }

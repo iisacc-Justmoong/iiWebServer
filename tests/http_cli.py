@@ -20,7 +20,8 @@ def running_host(executable, directory, *options):
         env.pop(key, None)
     with (directory / "host.log").open("w") as log:
         process = subprocess.Popen([str(executable), "--port", "0", *options],
-                                   stdout=subprocess.PIPE, stderr=log, text=True, env=env)
+                                   stdout=subprocess.PIPE, stderr=log, text=True, env=env,
+                                   creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0)
         lines = queue.Queue()
         threading.Thread(target=lambda: lines.put(process.stdout.readline()), daemon=True).start()
         try:
@@ -65,7 +66,7 @@ def check(executable, directory):
         with socket.create_connection(("127.0.0.1", port), timeout=5) as active:
             active.sendall(b"POST /api/echo HTTP/1.1\r\nHost: localhost\r\nContent-Length: 4\r\n\r\nab")
             time.sleep(0.1)
-            process.send_signal(signal.SIGTERM)
+            process.send_signal(signal.CTRL_BREAK_EVENT if os.name == "nt" else signal.SIGTERM)
             time.sleep(0.1)
             active.sendall(b"cd")
             reply = bytearray()
