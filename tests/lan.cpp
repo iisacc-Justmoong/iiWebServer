@@ -196,7 +196,7 @@ private slots:
         LanLink link; QVERIFY(LanLink::decode(host.createOffer(), &link)); link.fingerprint = QString(64, '0');
         QSignalSpy paired(&host, &LanPeer::paired); QVERIFY(client.join(link.encode(), "phone", "Phone"));
         QTRY_COMPARE(client.phase(), "error"); QVERIFY(!client.connected()); QCOMPARE(paired.size(), 0);
-        QVERIFY(client.errorString().contains("certificate"));
+        QVERIFY2(client.errorString().contains("certificate"), qPrintable(client.errorString()));
     }
     void cancellationExpiryAndFilesFailure() {
         LanPeer host, client;

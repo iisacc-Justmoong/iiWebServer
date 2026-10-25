@@ -33,3 +33,10 @@ macOS arm64, Qt Core/Test 6.8.3, OpenSSL 4.0.3에서 Release 빌드와 Workspace
 설치된 공개 헤더는 iiWebServer 9개와 iiNetwork 20개가 소스와 일치한다. `otool -L`에서 생성·설치된 iiWebServer 라이브러리의 직접 의존성에는 Qt Network와 Qt WebSockets가 없다. Qt Core 신호 경계는 유지한다. 설치 검증 위치는 각각 `build/package`이며, 기존 사용자 전역 설치와 실행 중인 앱은 교체하지 않았다. Windows·Linux·Android·iOS의 네이티브 빌드·실행 결과는 이 기록에 포함하지 않는다.
 
 소스·설치 소비자 로그는 저장소 루트 기준 `build/rename-tests.log`, `build/final-network-tests.log`, `build/final-hosting-isolated.log`, `build/consumer-tests.log`, `build/final-consumer-tests.log`, `build/downstream-final-build.log`, `build/downstream-final-network-tests.log`에 있다. Workspace 전체 변경 및 검증 목록은 Workspace 루트의 `build/iiwebserver-migration/result.json`에 기록한다.
+
+## LAN 인증서 실패 회귀 검사
+
+QR에 기록된 지문과 서버 인증서가 다르면 페어링을 완료하거나 파일을 노출하지 않는다.
+`LanTests::certificatePinMismatchNeverPairs`는 오류 원인에 인증서 검증 실패가 남아 있는지도
+확인하며, 실패 시 실제 오류 문자열을 출력한다. 네이티브 TLS 계층은 연결별 검증 상태로
+원인을 보존하므로 오류 큐나 콜백 순서 차이가 일반 핸드셰이크 실패로 이를 가리지 않아야 한다.
