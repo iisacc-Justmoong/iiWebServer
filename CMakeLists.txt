@@ -21,7 +21,11 @@ find_package(iiNetwork 0.5 CONFIG REQUIRED HINTS "${CMAKE_CURRENT_SOURCE_DIR}/..
 if(NOT iiNetwork_HTTP_SERVER_LIFECYCLE AND NOT TARGET iiNetwork)
     message(FATAL_ERROR "Rebuild iiNetwork with HTTP shutdown and response deadlines before building iiWebServer")
 endif()
-add_library(iiWebServerHttp src/HttpServer.cpp src/iiWebServer/HttpServer.h src/iiWebServer/HttpExport.h)
+foreach(_header HttpServer HttpExport)
+    file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/iiWebServer/${_header}.h"
+        CONTENT "#pragma once\n#include \"${CMAKE_CURRENT_SOURCE_DIR}/src/Http/${_header}.h\"\n")
+endforeach()
+add_library(iiWebServerHttp src/Http/HttpServer.cpp src/Http/HttpServer.h src/Http/HttpExport.h)
 add_library(iiWebServer::Http ALIAS iiWebServerHttp)
 set_target_properties(iiWebServerHttp PROPERTIES EXPORT_NAME Http CXX_EXTENSIONS OFF
     AUTOMOC OFF AUTOUIC OFF AUTORCC OFF VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR}
@@ -33,7 +37,7 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 target_link_libraries(iiWebServerHttp PUBLIC iiNetwork::iiNetwork)
 target_include_directories(iiWebServerHttp PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 if(APPLE)
     set_property(TARGET iiWebServerHttp PROPERTY INSTALL_RPATH "@loader_path")
 elseif(UNIX)
@@ -51,6 +55,8 @@ if(NOT IOS AND NOT ANDROID AND NOT EMSCRIPTEN)
     install(TARGETS ii-http-server RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 if(BUILD_TESTING)
+    add_test(NAME iiWebServer.source_layout COMMAND ${CMAKE_COMMAND}
+        "-DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}" -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/source_layout.cmake")
     add_executable(iiWebServerHttpTests tests/http.cpp)
     target_link_libraries(iiWebServerHttpTests PRIVATE iiWebServer::Http)
     set_target_properties(iiWebServerHttpTests PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF CXX_EXTENSIONS OFF)
@@ -78,7 +84,7 @@ if(BUILD_TESTING)
 endif()
 install(TARGETS iiWebServerHttp EXPORT iiWebServerHttpTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES src/iiWebServer/HttpServer.h src/iiWebServer/HttpExport.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iiWebServer)
+install(FILES src/Http/HttpServer.h src/Http/HttpExport.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iiWebServer)
 install(EXPORT iiWebServerHttpTargets FILE iiWebServerHttpTargets.cmake NAMESPACE iiWebServer:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiWebServer)
 install(FILES docs/HttpServer.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiWebServer/docs)
 install(FILES README.md LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/iiWebServer)
@@ -97,10 +103,26 @@ find_package(iiFileProviderNative 0.7 CONFIG REQUIRED HINTS "$ENV{IIFILEPROVIDER
 find_package(Qt6 6.8.3 EXACT REQUIRED COMPONENTS Core)
 set(CMAKE_AUTOMOC ON)
 
-add_library(iiWebServer src/iiWebServer.h src/iiWebServer.cpp src/WebServer.h src/iiWebServerExport.h
-    src/NetworkTransport.h src/NetworkTransport.cpp src/NetworkTypes.h
-    src/Protocol.h src/BinaryFrame.h src/SessionAuthenticator.cpp src/RelayServer.cpp src/Peer.cpp src/FileShare.cpp src/PairingLink.cpp src/PairingLink.h src/LanPeer.cpp src/LanPeer.h
-    src/Transfer.h src/Transfer.cpp src/StorageBridge.h src/StorageBridge.cpp)
+set(_compat_public_headers
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Transport/NetworkTypes.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Transport/NetworkTransport.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Compatibility/iiWebServer.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Peers/WebServer.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Peers/PairingLink.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Peers/LanPeer.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Transfer/Transfer.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Storage/StorageBridge.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Compatibility/iiWebServerExport.h"
+)
+foreach(_header IN LISTS _compat_public_headers)
+    get_filename_component(_name "${_header}" NAME)
+    file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/${_name}"
+        CONTENT "#pragma once\n#include \"${_header}\"\n")
+endforeach()
+add_library(iiWebServer src/Compatibility/iiWebServer.h src/Compatibility/iiWebServer.cpp src/Peers/WebServer.h src/Compatibility/iiWebServerExport.h
+    src/Transport/NetworkTransport.h src/Transport/NetworkTransport.cpp src/Transport/NetworkTypes.h
+    src/Protocol/Protocol.h src/Protocol/BinaryFrame.h src/Peers/SessionAuthenticator.cpp src/Peers/RelayServer.cpp src/Peers/Peer.cpp src/FileSharing/FileShare.cpp src/Peers/PairingLink.cpp src/Peers/PairingLink.h src/Peers/LanPeer.cpp src/Peers/LanPeer.h
+    src/Transfer/Transfer.h src/Transfer/Transfer.cpp src/Storage/StorageBridge.h src/Storage/StorageBridge.cpp)
 set(_transfer_default ON)
 if(IOS OR ANDROID)
     set(_transfer_default OFF)
@@ -169,7 +191,7 @@ if(NOT IOS AND NOT ANDROID)
         DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderNative)
     set(IIWEBSERVER_NEEDS_CRYPTO TRUE)
     find_package(OpenSSL 3 REQUIRED COMPONENTS Crypto)
-    target_sources(iiWebServer PRIVATE src/LanIdentity.cpp src/LanIdentity.h)
+    target_sources(iiWebServer PRIVATE src/Peers/LanIdentity.cpp src/Peers/LanIdentity.h)
     target_link_libraries(iiWebServer PRIVATE OpenSSL::Crypto)
     target_compile_definitions(iiWebServer PRIVATE IIWEBSERVER_LAN_HOST=1)
 endif()
@@ -181,8 +203,9 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 target_link_libraries(iiWebServer PUBLIC Qt6::Core iiNetwork::iiNetwork iiWebServer::Http iiFileProvider::iiFileProvider iiFileProvider::Native)
 target_include_directories(iiWebServer PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE src/Compatibility src/Transport src/Protocol src/Peers src/FileSharing src/Transfer src/Storage
 )
 set_target_properties(iiWebServer PROPERTIES
     CXX_EXTENSIONS OFF
@@ -318,7 +341,7 @@ install(TARGETS iiWebServer EXPORT iiWebServerTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES src/NetworkTypes.h src/NetworkTransport.h src/iiWebServer.h src/WebServer.h src/PairingLink.h src/LanPeer.h src/Transfer.h src/StorageBridge.h src/iiWebServerExport.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${_compat_public_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES docs/Network.md docs/FileTransfer.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiWebServer/docs)
 install(FILES ThirdParty/Curl-LICENSE.txt ThirdParty/Rclone-LICENSE.txt
     ThirdParty/Pyftpdlib-LICENSE.txt ThirdParty/PyOpenSSL-LICENSE.txt

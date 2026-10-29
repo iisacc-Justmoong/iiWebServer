@@ -1,5 +1,7 @@
 # iiWebServer
 
+Sources and adjacent headers are grouped by responsibility under `src/`; see [source layout](docs/SourceLayout.md). Installed public include names remain unchanged.
+
 The native embedded HTTP component is `iiWebServer::Http`, selected with
 `find_package(iiWebServer CONFIG REQUIRED COMPONENTS Http)` and
 `#include <iiWebServer/HttpServer.h>`. It uses iiNetwork and C++23 without Qt or
@@ -185,7 +187,7 @@ cmake --build build/consumer/build --parallel 4
 ctest --test-dir build/consumer/build --output-on-failure
 ```
 
-It runs the same verification as `INSTALL_PREFIX=... ./install.sh`. The install target is `iiWebServer::iiWebServer`, the public headers are `src/iiWebServer.h`, `src/WebServer.h`, `src/PairingLink.h`, and `src/iiWebServerExport.h`. It does not create circular references between headers. It uses iOS and `BUILD_SHARED_LIBS=OFF` in `BUILD_TESTING=OFF`. It maintains the existing `helloWorld()` ABI. All build artifacts are placed under `build/`.
+It runs the same verification as `INSTALL_PREFIX=... ./install.sh`. The install target is `iiWebServer::iiWebServer`, the public headers are `src/Compatibility/iiWebServer.h`, `src/Peers/WebServer.h`, `src/Peers/PairingLink.h`, and `src/Compatibility/iiWebServerExport.h`. It does not create circular references between headers. It uses iOS and `BUILD_SHARED_LIBS=OFF` in `BUILD_TESTING=OFF`. It maintains the existing `helloWorld()` ABI. All build artifacts are placed under `build/`.
 
 <a id="의존성-검토"></a>
 

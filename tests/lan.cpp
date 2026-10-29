@@ -4,7 +4,7 @@
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
-#include "../src/BinaryFrame.h"
+#include "../src/Protocol/BinaryFrame.h"
 #include <QMessageAuthenticationCode>
 
 using namespace iiWebServer;

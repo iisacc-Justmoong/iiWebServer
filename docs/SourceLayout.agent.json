@@ -1,0 +1,121 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:9e4ceef068a0ee021b559d391ffd6deece16c0decddd3f461a92fd2892af1e75",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiWebServer",
+    "name": "iiWebServer",
+    "root": "SDK/iiWebServer",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/SourceLayout.md",
+    "sha256": "8a2361e886a367e375f0fe18bee27df1ba38bf6f7e6b8b571c4789d8d3a7d752",
+    "bytes": 664,
+    "line_count": 10,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "소스 책임 분류",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 소스 책임 분류\n",
+      "level": 1,
+      "title": "소스 책임 분류"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "공개 헤더와 구현은 `src/` 아래 책임별 디렉터리에 함께 둔다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "list",
+      "start_line": 5,
+      "end_line": 8,
+      "raw": "- `Http`: Qt에 의존하지 않는 HTTP 서버 API와 구현.\n- `Compatibility`: 기존 Qt 기반 공개 진입점과 내보내기 정의.\n- `Transport`, `Protocol`, `Peers`: 연결, 프로토콜과 피어·릴레이 처리.\n- `FileSharing`, `Transfer`, `Storage`: 파일 공유, 전송, 저장소 연동.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "`Http`: Qt에 의존하지 않는 HTTP 서버 API와 구현.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`Compatibility`: 기존 Qt 기반 공개 진입점과 내보내기 정의.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`Transport`, `Protocol`, `Peers`: 연결, 프로토콜과 피어·릴레이 처리.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`FileSharing`, `Transfer`, `Storage`: 파일 공유, 전송, 저장소 연동.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "빌드에서 생성하는 forwarding 헤더와 설치된 공개 헤더는 기존 `<iiWebServer/HttpServer.h>` 및 호환 API 헤더 이름을 유지한다. `tests/source_layout.cmake`와 SDK 공통 경계 테스트가 구조 회귀를 검사한다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "소스 책임 분류",
+      "anchor": "소스-책임-분류",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}
