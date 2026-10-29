@@ -1,0 +1,152 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:34b646d5a3e477cc1b15788497fb3eb0e6fb13f15267e6f59131c78c5970e6a8",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiWebServer",
+    "name": "iiWebServer",
+    "root": "SDK/iiWebServer",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/FILE_PROVIDER.md",
+    "sha256": "cfa99a6445bcf17a454bffc63622d81d86e435ea90629662e9127bd00ab9d24e",
+    "bytes": 1035,
+    "line_count": 21,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "File creation ownership in iiWebServer",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# File creation ownership in iiWebServer\n",
+      "level": 1,
+      "title": "File creation ownership in iiWebServer"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "Confined uploads, streaming transfer output and platform file-share creation use provider-owned native descriptors/devices. Server routing, TLS, grants and transport validation remain here.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 9,
+      "raw": "The Python TLS FTP host supplies `ProviderFilesystem` to pyftpdlib. STOR/APPE,\nSTOU temporary files, MKD and rename operations use the common native-backed\nprovider. Build and installed runtime directories carry the adapter, native\nshared library and notices. External rclone processes remain delegated protocol\nengines; their internals are outside the repository source factory audit.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 11,
+      "end_line": 14,
+      "raw": "The common [ownership contract](../../iiFileProvider/docs/FILE_OWNERSHIP.md) defines stream, staging, control-file and\ninstalled-package rules. Source regression tests remain with this module; the\nworkspace creation audit also checks these boundaries. Build/deployment and target\nruntime validation are separate evidence.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "Changed boundaries:\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 17,
+      "end_line": 18,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "list",
+      "start_line": 19,
+      "end_line": 21,
+      "raw": "- `src/FileShare.cpp`\n- `src/Transfer.cpp`\n- `src/WindowsFileShare.h`\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "`src/FileShare.cpp`",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`src/Transfer.cpp`",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`src/WindowsFileShare.h`",
+          "checked": null
+        }
+      ]
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "File creation ownership in iiWebServer",
+      "anchor": "file-creation-ownership-in-iiwebserver",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000007",
+        "label": "ownership contract",
+        "target": "../../iiFileProvider/docs/FILE_OWNERSHIP.md",
+        "kind": "relative",
+        "line": 11
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

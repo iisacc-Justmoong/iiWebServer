@@ -1,0 +1,935 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:4f13e5b3544ddb420c65ed73ec00870a0047017836947e6809edcdb11cc5d540",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiWebServer",
+    "name": "iiWebServer",
+    "root": "SDK/iiWebServer",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/WindowsBuildAndRun.md",
+    "sha256": "ddd70f1799dddacb6cd1a1dd9a64951c3e5775177e9a8d367355bb45a01729bd",
+    "bytes": 12639,
+    "line_count": 156,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "iiWebServer: Windows 빌드 및 실행",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiWebServer: Windows 빌드 및 실행\r\n",
+      "level": 1,
+      "title": "iiWebServer: Windows 빌드 및 실행"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "LAN TLS pairing, hosting 및 파일 전송을 제공하는 Qt 기반 서버 SDK이다.\r\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "검증 기록 갱신: `2026-10-20T02:45:37+09:00`. 변경 전 소스 기준 commit: `bc11b80f4003489210e9af658a0886591e4832ff`. 아래 결과는 이번 변경을 포함한 작업 트리의 검증이다.\r\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "heading",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "## 현재 검증 상태\r\n",
+      "level": 2,
+      "title": "현재 검증 상태"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "Release 빌드·실행 검사·설치를 완료하였다. 등록 검사 12개 중 12개 통과, 0개 실패, 0개 skip이다.\r\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "Windows rclone의 NFS 서버는 제공되지 않는다. 해당 요청을 `unsupported_protocol`로 거부하는 회귀 검사는 통과하였으며 NFS I/O 성공으로 계산하지 않는다. 지원되는 로컬 프로토콜 전송·hosting·SMB2 검사는 실제 실행하였다.\r\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "heading",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "## 이 프로젝트의 의존성과 실행 범위\r\n",
+      "level": 2,
+      "title": "이 프로젝트의 의존성과 실행 범위"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "선행 workspace SDK는 다음과 같다. 각각의 Windows 지침에 따라 실행 검증과 설치를 완료한 뒤 진행한다.\r\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "list",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "- [iiFileProvider](../../../SDK/iiFileProvider/docs/WindowsBuildAndRun.md)\r\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "[iiFileProvider](../../../SDK/iiFileProvider/docs/WindowsBuildAndRun.md)",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "list",
+      "start_line": 19,
+      "end_line": 20,
+      "raw": "- iiFileProvider 및 Native, iiNetwork 0.5, Qt Core/Test, CURL 7.85 이상과 OpenSSL Crypto/SSL가 필요하다.\r\n- 외부 storage process 기능을 실제로 사용하려면 별도로 해당 프로그램이 필요하다. fixture와 실제 서비스 연결을 구분한다.\r\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "iiFileProvider 및 Native, iiNetwork 0.5, Qt Core/Test, CURL 7.85 이상과 OpenSSL Crypto/SSL가 필요하다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "외부 storage process 기능을 실제로 사용하려면 별도로 해당 프로그램이 필요하다. fixture와 실제 서비스 연결을 구분한다.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 21,
+      "end_line": 21,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 22,
+      "end_line": 22,
+      "raw": "프로젝트별 Windows 조건은 다음과 같다.\r\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 23,
+      "end_line": 23,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "list",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "- 네트워크 테스트는 로컬 fixture 연결을 포함한다. 공개 서버 배포나 실제 클라우드 자격 증명 사용의 증거로 취급하지 않는다.\r\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "네트워크 테스트는 로컬 fixture 연결을 포함한다. 공개 서버 배포나 실제 클라우드 자격 증명 사용의 증거로 취급하지 않는다.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "heading",
+      "start_line": 26,
+      "end_line": 26,
+      "raw": "## 환경 준비\r\n",
+      "level": 2,
+      "title": "환경 준비"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 27,
+      "end_line": 27,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 28,
+      "end_line": 28,
+      "raw": "PowerShell에서 이 프로젝트 루트로 이동한 뒤 순서대로 실행한다. workspace 배치는 `Workspace/SDK/<이름>`을 전제로 한다.\r\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 29,
+      "end_line": 29,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 30,
+      "end_line": 30,
+      "raw": "검증 도구는 MSVC 19.51 x64, Windows SDK 10.0.28000, CMake 4.4.4, Ninja 1.13.2이다. 개발 shell은 빌드 재현을 위해 Python 3.14.8을 선택하며 시스템 기본 Python 3.15.0과 구분한다.\r\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 31,
+      "end_line": 31,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "fenced_code",
+      "start_line": 32,
+      "end_line": 43,
+      "raw": "```powershell\r\n$ErrorActionPreference = 'Stop'\r\n$project = (Get-Location).Path\r\n$workspace = (Resolve-Path -LiteralPath '../..').Path\r\n. (Join-Path $workspace 'SDK/Windows/Enter-DevEnvironment.ps1')\r\nSet-Location -LiteralPath $project\r\n$python = (Join-Path $workspace 'Tools/Python314/tools/python.exe').Replace('\\', '/')\r\n$compiler = (Get-Command cl.exe -ErrorAction Stop).Source.Replace('\\', '/')\r\n$toolchain = (Join-Path $workspace 'Tools/vcpkg/scripts/buildsystems/vcpkg.cmake').Replace('\\', '/')\r\n$msvcInclude = (Join-Path $workspace 'SDK/Windows/WindowsMsvcPrefix.cmake').Replace('\\', '/')\r\n$prefix = (Join-Path $env:USERPROFILE '.local/SDK/iiWebServer').Replace('\\', '/')\r\n```\r\n",
+      "language": "powershell",
+      "code": "$ErrorActionPreference = 'Stop'\r\n$project = (Get-Location).Path\r\n$workspace = (Resolve-Path -LiteralPath '../..').Path\r\n. (Join-Path $workspace 'SDK/Windows/Enter-DevEnvironment.ps1')\r\nSet-Location -LiteralPath $project\r\n$python = (Join-Path $workspace 'Tools/Python314/tools/python.exe').Replace('\\', '/')\r\n$compiler = (Get-Command cl.exe -ErrorAction Stop).Source.Replace('\\', '/')\r\n$toolchain = (Join-Path $workspace 'Tools/vcpkg/scripts/buildsystems/vcpkg.cmake').Replace('\\', '/')\r\n$msvcInclude = (Join-Path $workspace 'SDK/Windows/WindowsMsvcPrefix.cmake').Replace('\\', '/')\r\n$prefix = (Join-Path $env:USERPROFILE '.local/SDK/iiWebServer').Replace('\\', '/')\r\n",
+      "closed": true
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 44,
+      "end_line": 44,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 45,
+      "end_line": 45,
+      "raw": "`Enter-DevEnvironment.ps1`은 Qt MSVC kit, vcpkg, 설치된 SDK의 검색 경로와 UTF-8 설정을 준비한다. `CMAKE_PREFIX_PATH`의 디렉터리 존재만으로 의존성 검증을 대신하지 않는다. 선행 SDK의 실행 검사와 설치를 먼저 완료해야 한다.\r\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 46,
+      "end_line": 46,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "heading",
+      "start_line": 47,
+      "end_line": 47,
+      "raw": "## 구성과 빌드\r\n",
+      "level": 2,
+      "title": "구성과 빌드"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 48,
+      "end_line": 48,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "fenced_code",
+      "start_line": 49,
+      "end_line": 77,
+      "raw": "```powershell\r\n$configure = @(\r\n    '-S', '.', '-B', 'build', '-G', 'Ninja'\r\n    '-DCMAKE_BUILD_TYPE=Release'\r\n    \"-DCMAKE_C_COMPILER=$compiler\"\r\n    \"-DCMAKE_CXX_COMPILER=$compiler\"\r\n    \"-DCMAKE_INSTALL_PREFIX=$prefix\"\r\n    \"-DCMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH\"\r\n    \"-DCMAKE_TOOLCHAIN_FILE=$toolchain\"\r\n    '-DVCPKG_TARGET_TRIPLET=x64-windows'\r\n    \"-DCMAKE_PROJECT_INCLUDE=$msvcInclude\"\r\n    \"-DPython3_EXECUTABLE=$python\"\r\n    \"-DPython_EXECUTABLE=$python\"\r\n    '-DQt6_DIR=C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6'\r\n    '-DBUILD_TESTING=ON'\r\n    '-DIIWEBSERVER_WITH_CURL=ON'\r\n    '-DIIWEBSERVER_WITH_STORAGE_PROCESS=ON'\r\n)\r\n& cmake @configure\r\nif ($LASTEXITCODE -ne 0) { throw 'CMake 구성 실패' }\r\n$cache = Get-Content -LiteralPath 'build/CMakeCache.txt' -Raw\r\nif ($cache -notmatch '(?m)^CMAKE_BUILD_TYPE:STRING=Release\\r?$') {\r\n    throw 'Release 구성이 유실되었음. 같은 구성 인수에 --fresh를 추가하여 다시 구성할 것'\r\n}\r\n& $python (Join-Path $workspace 'SDK/Windows/Configure-WindowsNinja.py') (Join-Path $project 'build')\r\nif ($LASTEXITCODE -ne 0) { throw 'Ninja MSVC 의존성 설정 실패' }\r\ncmake --build build --config Release --parallel 4\r\nif ($LASTEXITCODE -ne 0) { throw '빌드 실패' }\r\n```\r\n",
+      "language": "powershell",
+      "code": "$configure = @(\r\n    '-S', '.', '-B', 'build', '-G', 'Ninja'\r\n    '-DCMAKE_BUILD_TYPE=Release'\r\n    \"-DCMAKE_C_COMPILER=$compiler\"\r\n    \"-DCMAKE_CXX_COMPILER=$compiler\"\r\n    \"-DCMAKE_INSTALL_PREFIX=$prefix\"\r\n    \"-DCMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH\"\r\n    \"-DCMAKE_TOOLCHAIN_FILE=$toolchain\"\r\n    '-DVCPKG_TARGET_TRIPLET=x64-windows'\r\n    \"-DCMAKE_PROJECT_INCLUDE=$msvcInclude\"\r\n    \"-DPython3_EXECUTABLE=$python\"\r\n    \"-DPython_EXECUTABLE=$python\"\r\n    '-DQt6_DIR=C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6'\r\n    '-DBUILD_TESTING=ON'\r\n    '-DIIWEBSERVER_WITH_CURL=ON'\r\n    '-DIIWEBSERVER_WITH_STORAGE_PROCESS=ON'\r\n)\r\n& cmake @configure\r\nif ($LASTEXITCODE -ne 0) { throw 'CMake 구성 실패' }\r\n$cache = Get-Content -LiteralPath 'build/CMakeCache.txt' -Raw\r\nif ($cache -notmatch '(?m)^CMAKE_BUILD_TYPE:STRING=Release\\r?$') {\r\n    throw 'Release 구성이 유실되었음. 같은 구성 인수에 --fresh를 추가하여 다시 구성할 것'\r\n}\r\n& $python (Join-Path $workspace 'SDK/Windows/Configure-WindowsNinja.py') (Join-Path $project 'build')\r\nif ($LASTEXITCODE -ne 0) { throw 'Ninja MSVC 의존성 설정 실패' }\r\ncmake --build build --config Release --parallel 4\r\nif ($LASTEXITCODE -ne 0) { throw '빌드 실패' }\r\n",
+      "closed": true
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 78,
+      "end_line": 78,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "paragraph",
+      "start_line": 79,
+      "end_line": 79,
+      "raw": "모든 생성 파일은 이 프로젝트의 `build/` 아래에 둔다. 컴파일러는 위에서 확인한 절대 경로를 사용한다. 기존 캐시가 다른 compiler 또는 generator를 사용한다면 같은 구성 인수에 `--fresh`를 추가하여 다시 구성한다. MSVC 키트와 MinGW 또는 Debug/Release 라이브러리를 혼합하지 않는다.\r\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 80,
+      "end_line": 80,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "paragraph",
+      "start_line": 81,
+      "end_line": 81,
+      "raw": "`WindowsMsvcPrefix.cmake`와 `Configure-WindowsNinja.py`는 MSVC include 출력 언어를 Ninja에 맞추고 UTF-8 실행 manifest를 적용한다. 빌드 병렬도는 4로 제한하며 실행 검사는 직렬로 수행한다.\r\n"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 82,
+      "end_line": 82,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "heading",
+      "start_line": 83,
+      "end_line": 83,
+      "raw": "## 실행과 확인\r\n",
+      "level": 2,
+      "title": "실행과 확인"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 84,
+      "end_line": 84,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 85,
+      "end_line": 85,
+      "raw": "Windows rclone은 NFS 서버를 제공하지 않는다. 해당 요청은 실행을 시작했다고 알리기 전에 `unsupported_protocol`로 거부하며 이를 회귀 검사한다. Unix의 NFS MOUNT/LOOKUP/READ/WRITE 검사는 유지한다. Windows에서는 NFS 호스팅을 실행 성공으로 집계하지 않는다. 근거는 [고정 버전의 upstream NFS 빌드 조건](https://github.com/rclone/rclone/blob/v1.75.2/cmd/serve/nfs/nfs.go)이다.\r\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 86,
+      "end_line": 86,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 87,
+      "end_line": 87,
+      "raw": "Windows SMB2 검사는 .NET 10 SDK와 [SMBLibrary](https://github.com/TalAloni/SMBLibrary/tree/582635541d2ec0c84eac5f66cbebd41e2d35c7ae)의 고정 소스 commit을 사용한다. CMake가 원본 ZIP의 SHA-256을 확인한 뒤 `tests/SmbWindowsFixture`를 `build/smb-fixture`로 빌드한다. 원본 서버가 LOGOFF 응답의 서명 전에 세션 키를 제거하는 결함은 검사 전용 `prepare_source.py`에서 응답을 큐에 넣은 뒤 세션을 제거하도록 보정한다. 클라이언트 서명 검증은 유지한다. .NET의 동명 암호화 클래스와 충돌하지 않도록 원본 `Utilities.AesCcm`을 명시한다. LGPL-3.0 소스와 라이선스는 build 디렉터리에 보존하며 SDK 라이브러리·설치본에는 포함하지 않는다. fixture는 loopback의 임시 포트, 임시 디렉터리, 검사 전용 NTLM 인증만 사용한다. OS 사용자·공유·445 포트와 Defender 설정을 변경하지 않는다. Unix에서는 기존 Impacket fixture를 유지한다.\r\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 88,
+      "end_line": 88,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "paragraph",
+      "start_line": 89,
+      "end_line": 89,
+      "raw": "프로토콜 검사 Python에는 SCP fixture용 `asyncssh`도 필요하다. 네이티브 미리보기 파일을 생성한 직후 Windows가 짧게 공유 잠금을 유지하는 경우 검사 임시 폴더 정리는 최대 3초 재시도한다. 재시도 대상은 공유 위반 32/33만이며 지속 잠금과 다른 권한 오류는 실패로 남긴다. 별도 cleanup 회귀 검사가 이 조건을 확인한다.\r\n"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 90,
+      "end_line": 90,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "paragraph",
+      "start_line": 91,
+      "end_line": 91,
+      "raw": "임시 TLS/SSH 개인 키는 Windows에서 상속 DACL을 제거하고 현재 사용자에게만 접근을 허용한다. `chmod`의 owner 권한만으로는 NTFS ACL이 제한되지 않으므로 OpenSSH가 키를 거부할 수 있다. 시스템 인증서 저장소나 실제 사용자 키는 변경하지 않는다.\r\n"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 92,
+      "end_line": 92,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "paragraph",
+      "start_line": 93,
+      "end_line": 93,
+      "raw": "관리되는 자식의 home과 temp는 모두 전용 runtime 디렉터리로 지정한다. Windows Python의 `Path.home()`에 필요한 `USERPROFILE`을 제공하면서도 사용자 site package는 비활성화한다. implicit FTPS와 FTPES는 각각 실제 파일 전송 검사를 수행한다. 부모 강제 종료 후 포트가 닫히는 확인은 Windows Job Object의 비동기 정리 시간을 포함하여 5초로 제한한다.\r\n"
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 94,
+      "end_line": 94,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "paragraph",
+      "start_line": 95,
+      "end_line": 95,
+      "raw": "실제 프로토콜 검사는 rclone 1.75.2와 `pyftpdlib`/`pyOpenSSL`을 사용한다. libcurl은 vcpkg의 `curl[openssl,ssh]:x64-windows` 구성으로 준비하여 사용자 지정 CA 파일과 SFTP known-host 검사를 지원한다. 기본 Schannel 구성에서 CRL이 없는 임시 CA fixture는 revocation 상태가 unknown으로 거부되므로 이 검증 환경은 OpenSSL backend를 사용한다. 인증서·호스트 이름 검증 옵션은 활성 상태로 유지한다.\r\n"
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 96,
+      "end_line": 96,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "fenced_code",
+      "start_line": 97,
+      "end_line": 102,
+      "raw": "```powershell\r\n$env:IIWEBSERVER_TEST_RCLONE = Join-Path $workspace 'Tools/Rclone/rclone-v1.75.2-windows-amd64/rclone.exe'\r\n$env:IIWEBSERVER_TEST_FTP_PYTHON = Join-Path $workspace 'Tools/PythonServerHost/Scripts/python.exe'\r\n$env:PYTHONPATH = (Join-Path $workspace 'Tools/python-serverhost') + ';' + $env:PYTHONPATH\r\n$env:CURL_SSL_BACKEND = 'openssl'\r\n```\r\n",
+      "language": "powershell",
+      "code": "$env:IIWEBSERVER_TEST_RCLONE = Join-Path $workspace 'Tools/Rclone/rclone-v1.75.2-windows-amd64/rclone.exe'\r\n$env:IIWEBSERVER_TEST_FTP_PYTHON = Join-Path $workspace 'Tools/PythonServerHost/Scripts/python.exe'\r\n$env:PYTHONPATH = (Join-Path $workspace 'Tools/python-serverhost') + ';' + $env:PYTHONPATH\r\n$env:CURL_SSL_BACKEND = 'openssl'\r\n",
+      "closed": true
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 103,
+      "end_line": 103,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "paragraph",
+      "start_line": 104,
+      "end_line": 104,
+      "raw": "`Tools/PythonServerHost`는 build Python으로 생성한 전용 venv이며 pyOpenSSL과 pyftpdlib를 설치한다. 관리되는 FTP 자식은 외부 Python 경로 환경변수를 전달받지 않아도 이 venv의 패키지와 script 옆의 native adapter를 찾을 수 있어야 한다.\r\n"
+    },
+    {
+      "id": "b000060",
+      "kind": "blank",
+      "start_line": 105,
+      "end_line": 105,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000061",
+      "kind": "paragraph",
+      "start_line": 106,
+      "end_line": 106,
+      "raw": "초기 설치는 아래 고정 requirements를 사용한다. Windows에서는 Impacket을 설치하지 않으며 SMB2는 위의 .NET fixture를 사용한다. 이번 SSH fixture의 실행 버전은 AsyncSSH 2.24.1이다.\r\n"
+    },
+    {
+      "id": "b000062",
+      "kind": "blank",
+      "start_line": 107,
+      "end_line": 107,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000063",
+      "kind": "fenced_code",
+      "start_line": 108,
+      "end_line": 118,
+      "raw": "```powershell\r\n$ftpPython = Join-Path $workspace 'Tools/PythonServerHost/Scripts/python.exe'\r\nif (-not (Test-Path -LiteralPath $ftpPython)) {\r\n    & $python -m venv (Join-Path $workspace 'Tools/PythonServerHost')\r\n    if ($LASTEXITCODE -ne 0) { throw 'FTP Python 환경 생성 실패' }\r\n}\r\n& $ftpPython -m pip install -r tools/ftp-requirements.txt\r\nif ($LASTEXITCODE -ne 0) { throw 'FTP 의존성 설치 실패' }\r\n& $python -m pip install --target (Join-Path $workspace 'Tools/python-serverhost') -r tests/protocol-requirements.txt\r\nif ($LASTEXITCODE -ne 0) { throw '프로토콜 검사 의존성 설치 실패' }\r\n```\r\n",
+      "language": "powershell",
+      "code": "$ftpPython = Join-Path $workspace 'Tools/PythonServerHost/Scripts/python.exe'\r\nif (-not (Test-Path -LiteralPath $ftpPython)) {\r\n    & $python -m venv (Join-Path $workspace 'Tools/PythonServerHost')\r\n    if ($LASTEXITCODE -ne 0) { throw 'FTP Python 환경 생성 실패' }\r\n}\r\n& $ftpPython -m pip install -r tools/ftp-requirements.txt\r\nif ($LASTEXITCODE -ne 0) { throw 'FTP 의존성 설치 실패' }\r\n& $python -m pip install --target (Join-Path $workspace 'Tools/python-serverhost') -r tests/protocol-requirements.txt\r\nif ($LASTEXITCODE -ne 0) { throw '프로토콜 검사 의존성 설치 실패' }\r\n",
+      "closed": true
+    },
+    {
+      "id": "b000064",
+      "kind": "blank",
+      "start_line": 119,
+      "end_line": 119,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000065",
+      "kind": "paragraph",
+      "start_line": 120,
+      "end_line": 120,
+      "raw": "Windows의 외부 저장소 backend는 rclone에 빈 설정을 전달할 때 `NUL`을 사용한다. Qt의 Win32 장치 경로는 Go의 설정 경로 정규화에서 거부된다. 설정 파일과 런타임 디렉터리는 Windows DACL을 조회하여 Everyone·Authenticated Users·Users의 공개 읽기/쓰기 권한을 거부한다. 검사에서는 실제 Everyone 읽기 ACE를 추가한 설정 파일이 거절되는지 확인한다.\r\n"
+    },
+    {
+      "id": "b000066",
+      "kind": "blank",
+      "start_line": 121,
+      "end_line": 121,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000067",
+      "kind": "paragraph",
+      "start_line": 122,
+      "end_line": 122,
+      "raw": "FTP Python adapter의 native DLL 옆에는 SQLite DLL도 배치한다. 현재 Python의 `ctypes`는 종속 DLL을 일반 `PATH`만으로 검색하지 않으므로 `iiWebServerProviderRuntime`이 두 파일을 같은 `build/lib`에 준비한다. TLS FTP 검사는 개발자 설치 경로 관련 환경변수를 제거한 상태에서 파일 생성·추가·이름 변경과 Unicode 전송을 실행한다.\r\n"
+    },
+    {
+      "id": "b000068",
+      "kind": "blank",
+      "start_line": 123,
+      "end_line": 123,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000069",
+      "kind": "paragraph",
+      "start_line": 124,
+      "end_line": 124,
+      "raw": "외부 저장소 프로세스는 Windows Job Object에 연결하며 마지막 job handle이 닫힐 때 종료한다. 부모 host가 강제로 종료되어도 rclone/FTP 자식과 수신 포트가 남지 않아야 하며, 실제 프로토콜 검사가 이를 확인한다.\r\n"
+    },
+    {
+      "id": "b000070",
+      "kind": "blank",
+      "start_line": 125,
+      "end_line": 125,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000071",
+      "kind": "paragraph",
+      "start_line": 126,
+      "end_line": 126,
+      "raw": "LAN, TLS pairing, hosting, file transfer 및 provider 파일 노출 경계를 검증한다.\r\n"
+    },
+    {
+      "id": "b000072",
+      "kind": "blank",
+      "start_line": 127,
+      "end_line": 127,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000073",
+      "kind": "fenced_code",
+      "start_line": 128,
+      "end_line": 135,
+      "raw": "```powershell\r\n$dllDirectories = @(Get-ChildItem -LiteralPath build -Recurse -Filter '*.dll' -File |\r\n    Select-Object -ExpandProperty DirectoryName | Sort-Object -Unique)\r\n$env:PATH = (@($dllDirectories) + @($env:PATH)) -join ';'\r\n$env:QSG_RENDER_LOOP = 'basic'\r\nctest --test-dir build -C Release --output-on-failure --parallel 1 --no-tests=error\r\nif ($LASTEXITCODE -ne 0) { throw '전체 실행 검사 실패' }\r\n```\r\n",
+      "language": "powershell",
+      "code": "$dllDirectories = @(Get-ChildItem -LiteralPath build -Recurse -Filter '*.dll' -File |\r\n    Select-Object -ExpandProperty DirectoryName | Sort-Object -Unique)\r\n$env:PATH = (@($dllDirectories) + @($env:PATH)) -join ';'\r\n$env:QSG_RENDER_LOOP = 'basic'\r\nctest --test-dir build -C Release --output-on-failure --parallel 1 --no-tests=error\r\nif ($LASTEXITCODE -ne 0) { throw '전체 실행 검사 실패' }\r\n",
+      "closed": true
+    },
+    {
+      "id": "b000074",
+      "kind": "blank",
+      "start_line": 136,
+      "end_line": 136,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000075",
+      "kind": "paragraph",
+      "start_line": 137,
+      "end_line": 137,
+      "raw": "현재 빌드에 실제 등록된 실행 경로의 예는 `iiWebServer.lan`, `iiWebServer.hosting`, `iiWebServer.pairing`이다. 전체 목록은 `ctest --test-dir build -N`으로 확인한다.\r\n"
+    },
+    {
+      "id": "b000076",
+      "kind": "blank",
+      "start_line": 138,
+      "end_line": 138,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000077",
+      "kind": "heading",
+      "start_line": 139,
+      "end_line": 139,
+      "raw": "## 설치와 배포 범위\r\n",
+      "level": 2,
+      "title": "설치와 배포 범위"
+    },
+    {
+      "id": "b000078",
+      "kind": "blank",
+      "start_line": 140,
+      "end_line": 140,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000079",
+      "kind": "paragraph",
+      "start_line": 141,
+      "end_line": 141,
+      "raw": "전체 테스트가 통과한 구성만 설치한다. skip된 선택 기능은 지원·실행 범위를 별도 기록한다.\r\n"
+    },
+    {
+      "id": "b000080",
+      "kind": "blank",
+      "start_line": 142,
+      "end_line": 142,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000081",
+      "kind": "fenced_code",
+      "start_line": 143,
+      "end_line": 146,
+      "raw": "```powershell\r\ncmake --install build --config Release --prefix \"$prefix\"\r\nif ($LASTEXITCODE -ne 0) { throw '설치 실패' }\r\n```\r\n",
+      "language": "powershell",
+      "code": "cmake --install build --config Release --prefix \"$prefix\"\r\nif ($LASTEXITCODE -ne 0) { throw '설치 실패' }\r\n",
+      "closed": true
+    },
+    {
+      "id": "b000082",
+      "kind": "blank",
+      "start_line": 147,
+      "end_line": 147,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000083",
+      "kind": "paragraph",
+      "start_line": 148,
+      "end_line": 148,
+      "raw": "설치 파일은 `build/install_manifest.txt`와 실제 prefix의 파일을 대조한다. 소비자 실행 시 prefix의 `bin`과 필요한 vcpkg DLL을 검색할 수 있어야 한다.\r\n"
+    },
+    {
+      "id": "b000084",
+      "kind": "blank",
+      "start_line": 149,
+      "end_line": 149,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000085",
+      "kind": "heading",
+      "start_line": 150,
+      "end_line": 150,
+      "raw": "## 검증 근거\r\n",
+      "level": 2,
+      "title": "검증 근거"
+    },
+    {
+      "id": "b000086",
+      "kind": "blank",
+      "start_line": 151,
+      "end_line": 151,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000087",
+      "kind": "list",
+      "start_line": 152,
+      "end_line": 154,
+      "raw": "- 빌드 정의: [CMakeLists.txt](../CMakeLists.txt)와 프로젝트 테스트 등록이다.\r\n- 이번 실행 결과: [Windows SDK 전체 검증 기록](https://github.com/iisacc-Justmoong/SDK/blob/main/Windows/Verification-20261020.md)이다.\r\n- 프로젝트별 실행 로그와 JUnit은 같은 검증 디렉터리에 보관한다. 로그의 종료 코드, 실패·skip 목록과 실제 실행 범위를 함께 확인한다.\r\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "빌드 정의: [CMakeLists.txt](../CMakeLists.txt)와 프로젝트 테스트 등록이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "이번 실행 결과: [Windows SDK 전체 검증 기록](https://github.com/iisacc-Justmoong/SDK/blob/main/Windows/Verification-20261020.md)이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "프로젝트별 실행 로그와 JUnit은 같은 검증 디렉터리에 보관한다. 로그의 종료 코드, 실패·skip 목록과 실제 실행 범위를 함께 확인한다.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000088",
+      "kind": "blank",
+      "start_line": 155,
+      "end_line": 155,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000089",
+      "kind": "paragraph",
+      "start_line": 156,
+      "end_line": 156,
+      "raw": "전체 SDK의 실행·설치와 커밋 조건은 [공통 Windows 검증 도구](https://github.com/iisacc-Justmoong/SDK/blob/main/Windows/README.md)에서 재현한다. 원본 JSON·JUnit·상세 로그는 로컬 `Workspace/build/maintenance/20261019-221920-sdk-recovery/final/`에 보관하며 Git에는 포함하지 않는다. 이 프로젝트의 성공은 제품·다른 플랫폼·별도 계정 및 물리 장치의 실연동을 대신하지 않는다.\r\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiWebServer: Windows 빌드 및 실행",
+      "anchor": "iiwebserver-windows-빌드-및-실행",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000007",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "현재 검증 상태",
+      "anchor": "현재-검증-상태",
+      "start_line": 7
+    },
+    {
+      "block_id": "b000013",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "이 프로젝트의 의존성과 실행 범위",
+      "anchor": "이-프로젝트의-의존성과-실행-범위",
+      "start_line": 13
+    },
+    {
+      "block_id": "b000025",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "환경 준비",
+      "anchor": "환경-준비",
+      "start_line": 26
+    },
+    {
+      "block_id": "b000035",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "구성과 빌드",
+      "anchor": "구성과-빌드",
+      "start_line": 47
+    },
+    {
+      "block_id": "b000043",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "실행과 확인",
+      "anchor": "실행과-확인",
+      "start_line": 83
+    },
+    {
+      "block_id": "b000077",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "설치와 배포 범위",
+      "anchor": "설치와-배포-범위",
+      "start_line": 139
+    },
+    {
+      "block_id": "b000085",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "검증 근거",
+      "anchor": "검증-근거",
+      "start_line": 150
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000011",
+        "line": 11,
+        "text": "Windows rclone의 NFS 서버는 제공되지 않는다. 해당 요청을 `unsupported_protocol`로 거부하는 회귀 검사는 통과하였으며 NFS I/O 성공으로 계산하지 않는다. 지원되는 로컬 프로토콜 전송·hosting·SMB2 검사는 실제 실행하였다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000023",
+        "line": 24,
+        "text": "- 네트워크 테스트는 로컬 fixture 연결을 포함한다. 공개 서버 배포나 실제 클라우드 자격 증명 사용의 증거로 취급하지 않는다.",
+        "basis": "lexical_match",
+        "context": "list"
+      },
+      {
+        "block_id": "b000033",
+        "line": 45,
+        "text": "`Enter-DevEnvironment.ps1`은 Qt MSVC kit, vcpkg, 설치된 SDK의 검색 경로와 UTF-8 설정을 준비한다. `CMAKE_PREFIX_PATH`의 디렉터리 존재만으로 의존성 검증을 대신하지 않는다. 선행 SDK의 실행 검사와 설치를 먼저 완료해야 한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000039",
+        "line": 79,
+        "text": "모든 생성 파일은 이 프로젝트의 `build/` 아래에 둔다. 컴파일러는 위에서 확인한 절대 경로를 사용한다. 기존 캐시가 다른 compiler 또는 generator를 사용한다면 같은 구성 인수에 `--fresh`를 추가하여 다시 구성한다. MSVC 키트와 MinGW 또는 Debug/Release 라이브러리를 혼합하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000045",
+        "line": 85,
+        "text": "Windows rclone은 NFS 서버를 제공하지 않는다. 해당 요청은 실행을 시작했다고 알리기 전에 `unsupported_protocol`로 거부하며 이를 회귀 검사한다. Unix의 NFS MOUNT/LOOKUP/READ/WRITE 검사는 유지한다. Windows에서는 NFS 호스팅을 실행 성공으로 집계하지 않는다. 근거는 [고정 버전의 upstream NFS 빌드 조건](https://github.com/rclone/rclone/blob/v1.75.2/cmd/serve/nfs/nfs.go)이다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000047",
+        "line": 87,
+        "text": "Windows SMB2 검사는 .NET 10 SDK와 [SMBLibrary](https://github.com/TalAloni/SMBLibrary/tree/582635541d2ec0c84eac5f66cbebd41e2d35c7ae)의 고정 소스 commit을 사용한다. CMake가 원본 ZIP의 SHA-256을 확인한 뒤 `tests/SmbWindowsFixture`를 `build/smb-fixture`로 빌드한다. 원본 서버가 LOGOFF 응답의 서명 전에 세션 키를 제거하는 결함은 검사 전용 `prepare_source.py`에서 응답을 큐에 넣은 뒤 세션을 제거하도록 보정한다. 클라이언트 서명 검증은 유지한다. .NET의 동명 암호화 클래스와 충돌하지 않도록 원본 `Utilities.AesCcm`을 명시한다. LGPL-3.0 소스와 라이선스는 build 디렉터리에 보존하며 SDK 라이브러리·설치본에는 포함하지 않는다. fixture는 loopback의 임시 포트, 임시 디렉터리, 검사 전용 NTLM 인증만 사용한다. OS 사용자·공유·445 포트와 Defender 설정을 변경하지 않는다. Unix에서는 기존 Impacket fixture를 유지한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000051",
+        "line": 91,
+        "text": "임시 TLS/SSH 개인 키는 Windows에서 상속 DACL을 제거하고 현재 사용자에게만 접근을 허용한다. `chmod`의 owner 권한만으로는 NTFS ACL이 제한되지 않으므로 OpenSSH가 키를 거부할 수 있다. 시스템 인증서 저장소나 실제 사용자 키는 변경하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000089",
+        "line": 156,
+        "text": "전체 SDK의 실행·설치와 커밋 조건은 [공통 Windows 검증 도구](https://github.com/iisacc-Justmoong/SDK/blob/main/Windows/README.md)에서 재현한다. 원본 JSON·JUnit·상세 로그는 로컬 `Workspace/build/maintenance/20261019-221920-sdk-recovery/final/`에 보관하며 Git에는 포함하지 않는다. 이 프로젝트의 성공은 제품·다른 플랫폼·별도 계정 및 물리 장치의 실연동을 대신하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000031",
+        "language": "powershell",
+        "code": "$ErrorActionPreference = 'Stop'\r\n$project = (Get-Location).Path\r\n$workspace = (Resolve-Path -LiteralPath '../..').Path\r\n. (Join-Path $workspace 'SDK/Windows/Enter-DevEnvironment.ps1')\r\nSet-Location -LiteralPath $project\r\n$python = (Join-Path $workspace 'Tools/Python314/tools/python.exe').Replace('\\', '/')\r\n$compiler = (Get-Command cl.exe -ErrorAction Stop).Source.Replace('\\', '/')\r\n$toolchain = (Join-Path $workspace 'Tools/vcpkg/scripts/buildsystems/vcpkg.cmake').Replace('\\', '/')\r\n$msvcInclude = (Join-Path $workspace 'SDK/Windows/WindowsMsvcPrefix.cmake').Replace('\\', '/')\r\n$prefix = (Join-Path $env:USERPROFILE '.local/SDK/iiWebServer').Replace('\\', '/')\r\n"
+      },
+      {
+        "block_id": "b000037",
+        "language": "powershell",
+        "code": "$configure = @(\r\n    '-S', '.', '-B', 'build', '-G', 'Ninja'\r\n    '-DCMAKE_BUILD_TYPE=Release'\r\n    \"-DCMAKE_C_COMPILER=$compiler\"\r\n    \"-DCMAKE_CXX_COMPILER=$compiler\"\r\n    \"-DCMAKE_INSTALL_PREFIX=$prefix\"\r\n    \"-DCMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH\"\r\n    \"-DCMAKE_TOOLCHAIN_FILE=$toolchain\"\r\n    '-DVCPKG_TARGET_TRIPLET=x64-windows'\r\n    \"-DCMAKE_PROJECT_INCLUDE=$msvcInclude\"\r\n    \"-DPython3_EXECUTABLE=$python\"\r\n    \"-DPython_EXECUTABLE=$python\"\r\n    '-DQt6_DIR=C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6'\r\n    '-DBUILD_TESTING=ON'\r\n    '-DIIWEBSERVER_WITH_CURL=ON'\r\n    '-DIIWEBSERVER_WITH_STORAGE_PROCESS=ON'\r\n)\r\n& cmake @configure\r\nif ($LASTEXITCODE -ne 0) { throw 'CMake 구성 실패' }\r\n$cache = Get-Content -LiteralPath 'build/CMakeCache.txt' -Raw\r\nif ($cache -notmatch '(?m)^CMAKE_BUILD_TYPE:STRING=Release\\r?$') {\r\n    throw 'Release 구성이 유실되었음. 같은 구성 인수에 --fresh를 추가하여 다시 구성할 것'\r\n}\r\n& $python (Join-Path $workspace 'SDK/Windows/Configure-WindowsNinja.py') (Join-Path $project 'build')\r\nif ($LASTEXITCODE -ne 0) { throw 'Ninja MSVC 의존성 설정 실패' }\r\ncmake --build build --config Release --parallel 4\r\nif ($LASTEXITCODE -ne 0) { throw '빌드 실패' }\r\n"
+      },
+      {
+        "block_id": "b000057",
+        "language": "powershell",
+        "code": "$env:IIWEBSERVER_TEST_RCLONE = Join-Path $workspace 'Tools/Rclone/rclone-v1.75.2-windows-amd64/rclone.exe'\r\n$env:IIWEBSERVER_TEST_FTP_PYTHON = Join-Path $workspace 'Tools/PythonServerHost/Scripts/python.exe'\r\n$env:PYTHONPATH = (Join-Path $workspace 'Tools/python-serverhost') + ';' + $env:PYTHONPATH\r\n$env:CURL_SSL_BACKEND = 'openssl'\r\n"
+      },
+      {
+        "block_id": "b000063",
+        "language": "powershell",
+        "code": "$ftpPython = Join-Path $workspace 'Tools/PythonServerHost/Scripts/python.exe'\r\nif (-not (Test-Path -LiteralPath $ftpPython)) {\r\n    & $python -m venv (Join-Path $workspace 'Tools/PythonServerHost')\r\n    if ($LASTEXITCODE -ne 0) { throw 'FTP Python 환경 생성 실패' }\r\n}\r\n& $ftpPython -m pip install -r tools/ftp-requirements.txt\r\nif ($LASTEXITCODE -ne 0) { throw 'FTP 의존성 설치 실패' }\r\n& $python -m pip install --target (Join-Path $workspace 'Tools/python-serverhost') -r tests/protocol-requirements.txt\r\nif ($LASTEXITCODE -ne 0) { throw '프로토콜 검사 의존성 설치 실패' }\r\n"
+      },
+      {
+        "block_id": "b000073",
+        "language": "powershell",
+        "code": "$dllDirectories = @(Get-ChildItem -LiteralPath build -Recurse -Filter '*.dll' -File |\r\n    Select-Object -ExpandProperty DirectoryName | Sort-Object -Unique)\r\n$env:PATH = (@($dllDirectories) + @($env:PATH)) -join ';'\r\n$env:QSG_RENDER_LOOP = 'basic'\r\nctest --test-dir build -C Release --output-on-failure --parallel 1 --no-tests=error\r\nif ($LASTEXITCODE -ne 0) { throw '전체 실행 검사 실패' }\r\n"
+      },
+      {
+        "block_id": "b000081",
+        "language": "powershell",
+        "code": "cmake --install build --config Release --prefix \"$prefix\"\r\nif ($LASTEXITCODE -ne 0) { throw '설치 실패' }\r\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000017",
+        "label": "iiFileProvider",
+        "target": "../../../SDK/iiFileProvider/docs/WindowsBuildAndRun.md",
+        "kind": "relative",
+        "line": 17
+      },
+      {
+        "block_id": "b000045",
+        "label": "고정 버전의 upstream NFS 빌드 조건",
+        "target": "https://github.com/rclone/rclone/blob/v1.75.2/cmd/serve/nfs/nfs.go",
+        "kind": "external",
+        "line": 85
+      },
+      {
+        "block_id": "b000047",
+        "label": "SMBLibrary",
+        "target": "https://github.com/TalAloni/SMBLibrary/tree/582635541d2ec0c84eac5f66cbebd41e2d35c7ae",
+        "kind": "external",
+        "line": 87
+      },
+      {
+        "block_id": "b000087",
+        "label": "CMakeLists.txt",
+        "target": "../CMakeLists.txt",
+        "kind": "relative",
+        "line": 152
+      },
+      {
+        "block_id": "b000087",
+        "label": "Windows SDK 전체 검증 기록",
+        "target": "https://github.com/iisacc-Justmoong/SDK/blob/main/Windows/Verification-20261020.md",
+        "kind": "external",
+        "line": 153
+      },
+      {
+        "block_id": "b000089",
+        "label": "공통 Windows 검증 도구",
+        "target": "https://github.com/iisacc-Justmoong/SDK/blob/main/Windows/README.md",
+        "kind": "external",
+        "line": 156
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

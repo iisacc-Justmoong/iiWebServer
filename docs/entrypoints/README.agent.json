@@ -1,0 +1,1596 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:8a59e762d6237a45cac2abe8e98a7d6393b806a5148b8e481a070f07f96fe465",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiWebServer",
+    "name": "iiWebServer",
+    "root": "SDK/iiWebServer",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "README.md",
+    "sha256": "86f79a373a8f0ecdd6e6f8b4fa4a74701e13ff75ac44bbf6bd2c4f9f06cb1038",
+    "bytes": 21751,
+    "line_count": 225,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "iiWebServer",
+    "role": "overview",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiWebServer\n",
+      "level": 1,
+      "title": "iiWebServer"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 12,
+      "raw": "The native embedded HTTP component is `iiWebServer::Http`, selected with\n`find_package(iiWebServer CONFIG REQUIRED COMPONENTS Http)` and\n`#include <iiWebServer/HttpServer.h>`. It uses iiNetwork and C++23 without Qt or\niiFileProvider. It provides routing, synchronous middleware, bounded HTTP/1.1\nrequests/responses and asynchronous graceful shutdown. The same application\nruns directly on loopback or behind Nginx for TLS, HTTP/2, static files and\nrequest limits. Build with `IIWEBSERVER_BUILD_COMPATIBILITY=OFF` for a fully\nnative package. Existing QObject LAN/relay APIs remain in the default\ncompatibility build. See [HTTP API and hybrid deployment](docs/HttpServer.md)\nand the [Nginx configuration](deploy/nginx/iiwebserver.conf).\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "[Windows build and execution](docs/WindowsBuildAndRun.md)\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 16,
+      "end_line": 18,
+      "raw": "Package release: **0.6.1** (2026-10-19). This patch packages the current\nsource snapshot; build, test and installation evidence is recorded in the SDK\npatch-release report. Earlier versioned feature notes remain historical.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 20,
+      "end_line": 22,
+      "raw": "The current working tree uses the renamed iiWebServer package and iiNetwork\ntransport. See [network migration and current verification](docs/Network.md);\nthe earlier release report does not validate this migration.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 23,
+      "end_line": 24,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "heading",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "## File presentation ownership\n",
+      "level": 2,
+      "title": "File presentation ownership"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 26,
+      "end_line": 26,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 27,
+      "end_line": 34,
+      "raw": "FileShare uses iiFileProvider 0.7's control-file rule for both native path access\nand enumeration. Preview/classification companions, private provider catalogs,\nstaging and locks are excluded before pagination; ordinary public hidden files\nremain shareable. A directory with hundreds of derived previews therefore does\nnot consume a page before its user assets can be listed. The hosting regression\nchecks this boundary and preservation of access to original files.\nCompleted native upload publication also notifies the provider, including when\nthe shared directory is outside a monitored Society drive.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 35,
+      "end_line": 35,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "html",
+      "start_line": 36,
+      "end_line": 36,
+      "raw": "<a id=\"060-lan-파일-본문의-바이너리-전송\"></a>\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 37,
+      "end_line": 37,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "heading",
+      "start_line": 38,
+      "end_line": 38,
+      "raw": "## 0.6.0: Binary transmission of LAN  file body content\n",
+      "level": 2,
+      "title": "0.6.0: Binary transmission of LAN  file body content"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 39,
+      "end_line": 39,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "`LanPeer` 's TLS  pairing negotiates `binary=1` . If both sides support it, only file `data`  is transmitted as 256   KiB  or less raw binary body. The client's negotiation result is confirmed with `binaryTransferEnabled()` . Other control messages, legacy clients, and relay paths maintain JSON, and the existing request handler API is also maintained. The network bytes that were increasing with Base64  encoding of the file body are reduced by about 25% . It is not even removing the encoding cost of the internal JSON  API.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 41,
+      "end_line": 41,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 42,
+      "end_line": 42,
+      "raw": "The frame is `ISB1` , big-endian 32-bit JSON  header length, up to 64   KiB  header, up to 256   KiB  file bytes order. The header contains allowed file field positions and the rest of the original message. Length, position, duplicate fields, and negotiation status are validated, and binary requests before pairing are rejected. `iiWebServer.lan`  checks actual TLS  bidirectional transmission, frame upper limit, and compatibility with previous JSON  peer. TCP  is the WebSocket  transmission and QUIC  is not implemented.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 43,
+      "end_line": 43,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "html",
+      "start_line": 44,
+      "end_line": 44,
+      "raw": "<a id=\"050-표준-파일-전송nas클라우드서버-호스팅\"></a>\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 45,
+      "end_line": 45,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "heading",
+      "start_line": 46,
+      "end_line": 46,
+      "raw": "## 0.5.0: Standard file transfer · NAS · Cloud · Server hosting\n",
+      "level": 2,
+      "title": "0.5.0: Standard file transfer · NAS · Cloud · Server hosting"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 47,
+      "end_line": 47,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 48,
+      "end_line": 48,
+      "raw": "`FileTransfer`  transmits based on libcurl-based HTTP (S), WebDAV(S) , FTP / FTPS / FTPES , SFTP / SCP , TFTP , Gopher(s), and local files. `StorageBridge`  provides common file operations across NAS · Cloud · Virtual storage configured in rclone. `FileProtocolServer`  manages HTTP (S), WebDAV(S) , FTP / FTPS / FTPES , SFTP , S3 , NFSv3, and restic servers. It includes binary streaming, atomic replacement of downloads · SHA-256 , job cancellation, credential separation, and actual engine feature lookup. Existing Peer · LanPeer  API is maintained.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 49,
+      "end_line": 49,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 50,
+      "end_line": 50,
+      "raw": "[support matrix, C++   API , command-line execution, and dependencies and validation](docs/FileTransfer.md)are referenced. Supported features depend on the actual libcurl/rclone build and each backend, and it does not mean guaranteeing all features of all services.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 51,
+      "end_line": 51,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "html",
+      "start_line": 52,
+      "end_line": 52,
+      "raw": "<a id=\"041-탐색한-기기의-직접-lan-페어링\"></a>\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 53,
+      "end_line": 53,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "heading",
+      "start_line": 54,
+      "end_line": 54,
+      "raw": "## 0.4.1: direct LAN pairing of the scanned device\n",
+      "level": 2,
+      "title": "0.4.1: direct LAN pairing of the scanned device"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 55,
+      "end_line": 55,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "paragraph",
+      "start_line": 56,
+      "end_line": 56,
+      "raw": "`createDeviceOffer(peerId)` creates one-time connection information bound to the device selected through discovery. After `join()`, `phase()` on both sides becomes `confirming`, and `verificationCode()` displays the same 12-digit hex code in 4-4-4 format. No Files list or bytes are returned before the host calls `confirmDevice()`. The code is bound to the SHA-256 of the host's TLS certificate fingerprint, one-time key, client random nonce, and device ID. Another device ID, duplicate connections, and expired or canceled requests are rejected. Confirmation waits for at most 60 seconds. `pairedDeviceIds()` provides currently connected devices on both host and client, allowing connection state to appear in the list. Discovery information is not proof of trust; the consumer UI must compare the codes on both sides and receive explicit connection confirmation from the host.\n"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 57,
+      "end_line": 57,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "paragraph",
+      "start_line": 58,
+      "end_line": 58,
+      "raw": "The SDK does not own Bonjour/NSD or account login. The Society app is responsible for device discovery, selection, and invitation reception within the account scope, and the SDK reuses existing TLS ·Files connections. `iiWebServer.lan` checks for selected device binding, prohibits calling the Files handler before final confirmation, checks for code match, and inspects confirmation and cancellation. Login tests are not called.\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 59,
+      "end_line": 59,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "html",
+      "start_line": 60,
+      "end_line": 60,
+      "raw": "<a id=\"직접-lan-qr-페어링\"></a>\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 61,
+      "end_line": 61,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "heading",
+      "start_line": 62,
+      "end_line": 62,
+      "raw": "## Directly LAN QR pairing\n",
+      "level": 2,
+      "title": "Directly LAN QR pairing"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 63,
+      "end_line": 63,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "paragraph",
+      "start_line": 64,
+      "end_line": 64,
+      "raw": "`LanPeer` connects desktop and mobile directly without an external relay or account server. The desktop's `startHost()` and `createOffer()` generate a version-2 `LanLink` QR containing a private IPv4 address, TLS certificate SHA-256, a 256-bit one-time key, and a 60-second expiry. Mobile connects through `join(qr, deviceId, name)`. No application data is sent before the QR certificate fingerprint is verified, and no login cookies or account models are received. Scanning the QR itself constitutes the host's access authorization.\n"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 65,
+      "end_line": 65,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 66,
+      "end_line": 66,
+      "raw": "After checking the Files list and completing the client confirm, send `paired` to both sides and allow `request()`. Cancel, expire, reuse, and other fingerprints are rejected. The connection key is stored in memory only and reconnected with a new QR after disconnection. Completed connections are not terminated via `cancelPairing()`. `stop()` closes the listener, connection, and pending requests. The SDK's existing RelayServer /Peer and version 1 PairingLink are maintained as native consumer compatible APIs.\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 67,
+      "end_line": 67,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 68,
+      "end_line": 68,
+      "raw": "The host is built only on desktop platforms. iOS/Android reject `startHost()` and include only the client. TCP, TLS, WebSocket framing, HTTP authentication and interface discovery use iiNetwork 0.5 or later. The existing QObject/JSON API remains a Qt Core boundary for GUI consumers. Desktop platforms use OpenSSL to generate temporary RSA-2048 identities, passed to iiNetwork as in-memory PEM. Private keys are not written to files or imported into a system keychain. OpenSSL notices are provided in `ThirdParty/OpenSSL-LICENSE.txt` and installed under `share/iiWebServer/licenses/`.\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 69,
+      "end_line": 69,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "paragraph",
+      "start_line": 70,
+      "end_line": 70,
+      "raw": "QR addresses permit only RFC 1918 IPv4 and explicitly specified test loopback. Automatic discovery enumerates native active, non-loopback interfaces and advertises private IPv4 addresses. Public addresses, DNS and link-local metadata addresses are rejected. It attempts at most 8 addresses in order, with no internet fallback. IPv6-only LANs are unsupported. The host applies TLS, a 1 MiB message limit, a4 MiB outbound-queue limit, and a limit of 8 connections. The client limits concurrent requests to 32.\n"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 71,
+      "end_line": 71,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "paragraph",
+      "start_line": 72,
+      "end_line": 72,
+      "raw": "`iiWebServer.lan` validates actual TLS pairing, file bytes, expiration, cancel, reuse, and fingerprint mismatch without calling login or SessionAuthenticator. The same check is applied to install consumers as well.\n"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 73,
+      "end_line": 74,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "paragraph",
+      "start_line": 75,
+      "end_line": 75,
+      "raw": "A local and remote app-hosting SDK based on C++23 and iiNetwork, with a Qt 6.8.3 Core GUI boundary. A consumer app uses a single `Peer` to provide its own files while accessing other hosts under the same account. Nearby devices first use a local TLS connection, switching to a remote WebSocket relay if the address cannot be reached. Both devices connect outbound to the relay, so router port forwarding is unnecessary.\n"
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 76,
+      "end_line": 76,
+      "raw": "\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "html",
+      "start_line": 77,
+      "end_line": 77,
+      "raw": "<a id=\"구성과-신뢰-경계\"></a>\n"
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 78,
+      "end_line": 78,
+      "raw": "\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "heading",
+      "start_line": 79,
+      "end_line": 79,
+      "raw": "## Composition and trust boundary\n",
+      "level": 2,
+      "title": "Composition and trust boundary"
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 80,
+      "end_line": 80,
+      "raw": "\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "list",
+      "start_line": 81,
+      "end_line": 84,
+      "raw": "- `RelayServer`: List of devices per authenticated account and service, one-time local access token, and request relay. It does not store files. It isolates lists and requests from different accounts.\n- `SessionAuthenticator`: Sends a cookie to the fixed HTTPS `/Account/GraphQL` and reads the verified `account.sub`. The `accountId` display string or a client-declared account is not authorization proof. It does not use response cookies, cache, or redirects.\n- `Peer`: Handles host registration, device search, local-priority transfer, remote switch, exponential reconnection, and request timeout. It displays only hosts of the same `service`.\n- `FileShare`: Includes list, metadata, chunked read, new file creation, and directory creation under root. The application can connect to other storage via `RequestHandler`. iiWebServer does not reference Society. The reserved `.iisacc-temporary.lock` sentinel is excluded from listings and cannot be read, modified, or created through this public API.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "`RelayServer`: List of devices per authenticated account and service, one-time local access token, and request relay. It does not store files. It isolates lists and requests from different accounts.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`SessionAuthenticator`: Sends a cookie to the fixed HTTPS `/Account/GraphQL` and reads the verified `account.sub`. The `accountId` display string or a client-declared account is not authorization proof. It does not use response cookies, cache, or redirects.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`Peer`: Handles host registration, device search, local-priority transfer, remote switch, exponential reconnection, and request timeout. It displays only hosts of the same `service`.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`FileShare`: Includes list, metadata, chunked read, new file creation, and directory creation under root. The application can connect to other storage via `RequestHandler`. iiWebServer does not reference Society. The reserved `.iisacc-temporary.lock` sentinel is excluded from listings and cannot be read, modified, or created through this public API.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000060",
+      "kind": "blank",
+      "start_line": 85,
+      "end_line": 85,
+      "raw": "\n"
+    },
+    {
+      "id": "b000061",
+      "kind": "paragraph",
+      "start_line": 86,
+      "end_line": 86,
+      "raw": "Authentication cookies are delivered only to trusted relays and account verification servers. Other devices receive 256-bit random one-time access tokens. Device local certificates SHA-256 are obtained from the trusted relay list and compared against the actual TLS certificate. Certificate errors are never ignored unconditionally. Relays authenticate using the default trusted CA. Non-TLS URLs and listeners are allowed only on numeric loopback addresses.\n"
+    },
+    {
+      "id": "b000062",
+      "kind": "blank",
+      "start_line": 87,
+      "end_line": 87,
+      "raw": "\n"
+    },
+    {
+      "id": "b000063",
+      "kind": "paragraph",
+      "start_line": 88,
+      "end_line": 88,
+      "raw": "Account verification is refreshed every 30 seconds, and the permission lifetime is a maximum of 60 seconds. Access is revoked upon refresh failure, expiration, logout, or connection termination. Local access tokens are consumed one time times and the corresponding connection is terminated upon expiration. LAN file transfers also require **device discovery and account verification relay connections**. QR pairing allows selecting hosts of the same account, but pairing does not replace account authentication or grant offline access permissions.\n"
+    },
+    {
+      "id": "b000064",
+      "kind": "blank",
+      "start_line": 89,
+      "end_line": 89,
+      "raw": "\n"
+    },
+    {
+      "id": "b000065",
+      "kind": "html",
+      "start_line": 90,
+      "end_line": 90,
+      "raw": "<a id=\"소비-앱-api\"></a>\n"
+    },
+    {
+      "id": "b000066",
+      "kind": "blank",
+      "start_line": 91,
+      "end_line": 91,
+      "raw": "\n"
+    },
+    {
+      "id": "b000067",
+      "kind": "heading",
+      "start_line": 92,
+      "end_line": 92,
+      "raw": "## Consumer app API\n",
+      "level": 2,
+      "title": "Consumer app API"
+    },
+    {
+      "id": "b000068",
+      "kind": "blank",
+      "start_line": 93,
+      "end_line": 93,
+      "raw": "\n"
+    },
+    {
+      "id": "b000069",
+      "kind": "fenced_code",
+      "start_line": 94,
+      "end_line": 112,
+      "raw": "```cpp\n#include <iiWebServer.h>\n\niiWebServer::FileShare files(\"/absolute/path/to/shared/Files\");\niiWebServer::Peer peer;\niiWebServer::PeerOptions options;\noptions.relayUrl = QUrl(\"wss://your-relay.example/server-host\");\noptions.credential = authenticatedCookieHeader; // Do not display this on screen or store it on disk.\noptions.peerId = stableDeviceId;\noptions.name = \"My desktop\";\noptions.service = \"com.example.files\";\noptions.localTls = hostCertificateAndPrivateKey;\npeer.start(options, [&files](const QString &, const QJsonObject &request) {\n    return files.handle(request);\n});\nQObject::connect(&peer, &iiWebServer::Peer::completed,\n    [](QString id, QJsonObject result, QString transport) { /* Handle the result */ });\nconst QString id = peer.request(otherDeviceId, {{\"op\", \"list\"}, {\"path\", \"\"}});\n```\n",
+      "language": "cpp",
+      "code": "#include <iiWebServer.h>\n\niiWebServer::FileShare files(\"/absolute/path/to/shared/Files\");\niiWebServer::Peer peer;\niiWebServer::PeerOptions options;\noptions.relayUrl = QUrl(\"wss://your-relay.example/server-host\");\noptions.credential = authenticatedCookieHeader; // Do not display this on screen or store it on disk.\noptions.peerId = stableDeviceId;\noptions.name = \"My desktop\";\noptions.service = \"com.example.files\";\noptions.localTls = hostCertificateAndPrivateKey;\npeer.start(options, [&files](const QString &, const QJsonObject &request) {\n    return files.handle(request);\n});\nQObject::connect(&peer, &iiWebServer::Peer::completed,\n    [](QString id, QJsonObject result, QString transport) { /* Handle the result */ });\nconst QString id = peer.request(otherDeviceId, {{\"op\", \"list\"}, {\"path\", \"\"}});\n",
+      "closed": true
+    },
+    {
+      "id": "b000070",
+      "kind": "blank",
+      "start_line": 113,
+      "end_line": 113,
+      "raw": "\n"
+    },
+    {
+      "id": "b000071",
+      "kind": "paragraph",
+      "start_line": 114,
+      "end_line": 114,
+      "raw": "`PeerOptions.localEnabled=false` is remote-only. `localHostingEnabled=false` disables only the local listener while retaining local-first access to other devices. `hostFiles=false` is a client that performs discovery and access only. If no local address is specified, active IPv4 interfaces are registered, and only addresses in the same subnet are attempted. `localTimeoutMs` defaults to 1.2 seconds per address; the overall request limit is 15 seconds. An API can explicitly specify an IPv6 address, but automatic advertisement uses IPv4.\n"
+    },
+    {
+      "id": "b000072",
+      "kind": "blank",
+      "start_line": 115,
+      "end_line": 115,
+      "raw": "\n"
+    },
+    {
+      "id": "b000073",
+      "kind": "paragraph",
+      "start_line": 116,
+      "end_line": 116,
+      "raw": "Handlers and signals are executed in the owning Qt thread. Large tasks must be separated into the application's asynchronous storage layer. Requests already sent are not re-executed via path switching. If a write response breaks, the caller must check the results as a list.\n"
+    },
+    {
+      "id": "b000074",
+      "kind": "blank",
+      "start_line": 117,
+      "end_line": 117,
+      "raw": "\n"
+    },
+    {
+      "id": "b000075",
+      "kind": "html",
+      "start_line": 118,
+      "end_line": 118,
+      "raw": "<a id=\"qr-페어링\"></a>\n"
+    },
+    {
+      "id": "b000076",
+      "kind": "blank",
+      "start_line": 119,
+      "end_line": 119,
+      "raw": "\n"
+    },
+    {
+      "id": "b000077",
+      "kind": "heading",
+      "start_line": 120,
+      "end_line": 120,
+      "raw": "## QR pairing\n",
+      "level": 2,
+      "title": "QR pairing"
+    },
+    {
+      "id": "b000078",
+      "kind": "blank",
+      "start_line": 121,
+      "end_line": 121,
+      "raw": "\n"
+    },
+    {
+      "id": "b000079",
+      "kind": "paragraph",
+      "start_line": 122,
+      "end_line": 122,
+      "raw": "Since the relay URL in QR is nested-encoded, escapes such as `%2F` · `%25` remain unchanged. This case is also verified via creation and parsing regression tests.\n"
+    },
+    {
+      "id": "b000080",
+      "kind": "blank",
+      "start_line": 123,
+      "end_line": 123,
+      "raw": "\n"
+    },
+    {
+      "id": "b000081",
+      "kind": "paragraph",
+      "start_line": 124,
+      "end_line": 124,
+      "raw": "`PairingLink` is responsible for the creation and strict parsing of `society://pair?v=1&relay=...&host=...&code=...`. It checks version, field duplication, host ID, 256-bit code, and the relay's TLS URL, and does not make network requests. The consumer app must compare the relay contained in the code against independent trusted settings. Sending the account cookie to that server solely based on parsing success is not allowed.\n"
+    },
+    {
+      "id": "b000082",
+      "kind": "blank",
+      "start_line": 125,
+      "end_line": 125,
+      "raw": "\n"
+    },
+    {
+      "id": "b000083",
+      "kind": "table",
+      "start_line": 126,
+      "end_line": 132,
+      "raw": "| Peer API |Role|\n| --- | --- |\n| `createPairingOffer()` |The connected host issues a one-time code. Events are distinguished by the returned request ID.|\n| `claimPairingOffer(code, expectedHost)` |The connected client submits the QR code and host ID.|\n| `confirmPairing(pairingId)` |The client confirms connection completion after actual host access verification.|\n| `cancelPairing(requestId)` |Cancel its own request. Already consumed QR codes cannot be recovered.|\n| `pairingEvent(QJsonObject)` |Receives `id`, `status`, and data for each stage.|\n",
+      "columns": [
+        "Peer API",
+        "Role"
+      ],
+      "rows": [
+        [
+          "`createPairingOffer()`",
+          "The connected host issues a one-time code. Events are distinguished by the returned request ID."
+        ],
+        [
+          "`claimPairingOffer(code, expectedHost)`",
+          "The connected client submits the QR code and host ID."
+        ],
+        [
+          "`confirmPairing(pairingId)`",
+          "The client confirms connection completion after actual host access verification."
+        ],
+        [
+          "`cancelPairing(requestId)`",
+          "Cancel its own request. Already consumed QR codes cannot be recovered."
+        ],
+        [
+          "`pairingEvent(QJsonObject)`",
+          "Receives `id`, `status`, and data for each stage."
+        ]
+      ]
+    },
+    {
+      "id": "b000084",
+      "kind": "blank",
+      "start_line": 133,
+      "end_line": 133,
+      "raw": "\n"
+    },
+    {
+      "id": "b000085",
+      "kind": "paragraph",
+      "start_line": 134,
+      "end_line": 134,
+      "raw": "Wire requests are `pair-offer`, `pair-claim`, `pair-confirm`, and `pair-cancel`, and the response is `type: pairing`. Status is `offered`, `claimed`, `paired`, `error`, `cancelled`, and `expired`. `offered` includes `code`, `peerId`, `name`, and string epoch-millisecond `expires`. `claimed` passes `pairingId`, relative `peerId` · `name`, and `expires` to both sides. The `paired` is delivered to both sides only if that client's confirm is received. SDK The server itself does not determine the meaning of file list inspection, and after receiving the Files list response where `DevicePairing` succeeded, it sends a confirm.\n"
+    },
+    {
+      "id": "b000086",
+      "kind": "blank",
+      "start_line": 135,
+      "end_line": 135,
+      "raw": "\n"
+    },
+    {
+      "id": "b000087",
+      "kind": "paragraph",
+      "start_line": 136,
+      "end_line": 136,
+      "raw": "The code is a hex representation of 32 bytes generated by the OS random generator. Server memory stores only the code's SHA-256. Its lifetime is the shorter of 60 seconds and the host authentication's remaining lifetime when issued. It is consumed immediately on claim. Confirmation waits at most 15 seconds and never beyond the QR expiry. Only registered hosts and clients for the same account and service connect. Another account, another host ID, and reuse are rejected with the same error. Connection closure, authentication failure, host unregistration, reissuance, cancellation, or expiry discards the corresponding pending state. Issuance and claim attempts are limited per session to 6 per 30 seconds. The server does not store persistent device relationships or account cookies on disk.\n"
+    },
+    {
+      "id": "b000088",
+      "kind": "blank",
+      "start_line": 137,
+      "end_line": 137,
+      "raw": "\n"
+    },
+    {
+      "id": "b000089",
+      "kind": "paragraph",
+      "start_line": 138,
+      "end_line": 138,
+      "raw": "`iiWebServer.pairing` strictly checks QR parsing, account isolation, host matching, one-time use, blocking another client's confirm, reissuance, cancellation, connection termination, expiration, and attempt limits as actual WebSocket. The install consumer also performs the same pairing check. Existing files, local/remote transfer APIs, and `helloWorld()` are maintained.\n"
+    },
+    {
+      "id": "b000090",
+      "kind": "blank",
+      "start_line": 139,
+      "end_line": 139,
+      "raw": "\n"
+    },
+    {
+      "id": "b000091",
+      "kind": "html",
+      "start_line": 140,
+      "end_line": 140,
+      "raw": "<a id=\"파일-계약\"></a>\n"
+    },
+    {
+      "id": "b000092",
+      "kind": "blank",
+      "start_line": 141,
+      "end_line": 141,
+      "raw": "\n"
+    },
+    {
+      "id": "b000093",
+      "kind": "heading",
+      "start_line": 142,
+      "end_line": 142,
+      "raw": "## File Contract\n",
+      "level": 2,
+      "title": "File Contract"
+    },
+    {
+      "id": "b000094",
+      "kind": "blank",
+      "start_line": 143,
+      "end_line": 143,
+      "raw": "\n"
+    },
+    {
+      "id": "b000095",
+      "kind": "table",
+      "start_line": 144,
+      "end_line": 150,
+      "raw": "| op |Request Fields|Response|\n| --- | --- | --- |\n| `list` |`path`, optional string `cursor`|Maximum 256 `entries`, `nextCursor`|\n| `stat` | `path` |String `size`, opaque `version`|\n| `read` |`path`, string `offset`, optional `version`|Maximum 256 KiB base64 `data`, `size`, `offset`, `version`, `eof`|\n| `write` | `path`, base64 `data` |Atomically create new files only, maximum 256 KiB, preserve existing files|\n| `mkdir` | `path` |New directory under existing parent|\n",
+      "columns": [
+        "op",
+        "Request Fields",
+        "Response"
+      ],
+      "rows": [
+        [
+          "`list`",
+          "`path`, optional string `cursor`",
+          "Maximum 256 `entries`, `nextCursor`"
+        ],
+        [
+          "`stat`",
+          "`path`",
+          "String `size`, opaque `version`"
+        ],
+        [
+          "`read`",
+          "`path`, string `offset`, optional `version`",
+          "Maximum 256 KiB base64 `data`, `size`, `offset`, `version`, `eof`"
+        ],
+        [
+          "`write`",
+          "`path`, base64 `data`",
+          "Atomically create new files only, maximum 256 KiB, preserve existing files"
+        ],
+        [
+          "`mkdir`",
+          "`path`",
+          "New directory under existing parent"
+        ]
+      ]
+    },
+    {
+      "id": "b000096",
+      "kind": "blank",
+      "start_line": 151,
+      "end_line": 151,
+      "raw": "\n"
+    },
+    {
+      "id": "b000097",
+      "kind": "paragraph",
+      "start_line": 152,
+      "end_line": 152,
+      "raw": "Integer size and offset are passed as strings to avoid JSON floating-point loss. Downloads must first receive `stat`, then all chunks with the same `version`. Modified files fail with `file_changed`. Directory page cursors must restart when the directory changes. Delete, overwrite, large upload, synchronization conflict resolution, and OS mount are not included in this API.\n"
+    },
+    {
+      "id": "b000098",
+      "kind": "blank",
+      "start_line": 153,
+      "end_line": 153,
+      "raw": "\n"
+    },
+    {
+      "id": "b000099",
+      "kind": "paragraph",
+      "start_line": 154,
+      "end_line": 154,
+      "raw": "Unix file provision uses `openat`, `O_NOFOLLOW`, directory FD, and inode/device checks. Rejects symbolic links, parent path moves, redirections, and replaced roots. New files are published via `linkat` after completing a temporary file in the same directory, so they do not overwrite existing files. Applications also check contracts such as root guard Society UUID. On Windows, requests are rejected until a safe native handle implementation is available by default `FileShare`. Transfer and relay layers and custom handlers are separated based on Qt.\n"
+    },
+    {
+      "id": "b000100",
+      "kind": "blank",
+      "start_line": 155,
+      "end_line": 155,
+      "raw": "\n"
+    },
+    {
+      "id": "b000101",
+      "kind": "paragraph",
+      "start_line": 156,
+      "end_line": 156,
+      "raw": "Message 1 MiB, send queue 4 MiB, 128 connections, concurrent requests per device 32, total relay requests 1024, limited to 64 local connections. Relay operators can view file traffic. Each connection to the relay is TLS, but the end-to-end encryption store is not. No account cookies or file data are logged to the relay.\n"
+    },
+    {
+      "id": "b000102",
+      "kind": "blank",
+      "start_line": 157,
+      "end_line": 157,
+      "raw": "\n"
+    },
+    {
+      "id": "b000103",
+      "kind": "html",
+      "start_line": 158,
+      "end_line": 158,
+      "raw": "<a id=\"중계-실행\"></a>\n"
+    },
+    {
+      "id": "b000104",
+      "kind": "blank",
+      "start_line": 159,
+      "end_line": 159,
+      "raw": "\n"
+    },
+    {
+      "id": "b000105",
+      "kind": "heading",
+      "start_line": 160,
+      "end_line": 160,
+      "raw": "## Run relay\n",
+      "level": 2,
+      "title": "Run relay"
+    },
+    {
+      "id": "b000106",
+      "kind": "blank",
+      "start_line": 161,
+      "end_line": 161,
+      "raw": "\n"
+    },
+    {
+      "id": "b000107",
+      "kind": "fenced_code",
+      "start_line": 162,
+      "end_line": 166,
+      "raw": "```sh\nbuild/ii-server-relay --address 0.0.0.0 --port 9443 \\\n  --certificate /secure/fullchain.pem --key /secure/private-key.pem \\\n  --session-url https://iisacc.com/Account/GraphQL\n```\n",
+      "language": "sh",
+      "code": "build/ii-server-relay --address 0.0.0.0 --port 9443 \\\n  --certificate /secure/fullchain.pem --key /secure/private-key.pem \\\n  --session-url https://iisacc.com/Account/GraphQL\n",
+      "closed": true
+    },
+    {
+      "id": "b000108",
+      "kind": "blank",
+      "start_line": 167,
+      "end_line": 167,
+      "raw": "\n"
+    },
+    {
+      "id": "b000109",
+      "kind": "paragraph",
+      "start_line": 168,
+      "end_line": 168,
+      "raw": "When using an existing HTTPS reverse proxy, bind the relay to `127.0.0.1:9443` and expose only WSS externally. The proxy supports WebSocket upgrade and connection lifetime must be longer than 60 seconds. Consumer apps must set the public relay URL. Implementation and loopback verification in this repository are not evidence of deployment on public servers or execution in other physical networks. Do not create new paid infrastructure.\n"
+    },
+    {
+      "id": "b000110",
+      "kind": "blank",
+      "start_line": 169,
+      "end_line": 169,
+      "raw": "\n"
+    },
+    {
+      "id": "b000111",
+      "kind": "html",
+      "start_line": 170,
+      "end_line": 170,
+      "raw": "<a id=\"빌드설치\"></a>\n"
+    },
+    {
+      "id": "b000112",
+      "kind": "blank",
+      "start_line": 171,
+      "end_line": 171,
+      "raw": "\n"
+    },
+    {
+      "id": "b000113",
+      "kind": "heading",
+      "start_line": 172,
+      "end_line": 172,
+      "raw": "## Build and Install\n",
+      "level": 2,
+      "title": "Build and Install"
+    },
+    {
+      "id": "b000114",
+      "kind": "blank",
+      "start_line": 173,
+      "end_line": 173,
+      "raw": "\n"
+    },
+    {
+      "id": "b000115",
+      "kind": "fenced_code",
+      "start_line": 174,
+      "end_line": 186,
+      "raw": "```sh\nnetwork_prefix=\"$PWD/../iiNetwork/build/package\" # Or the installed iiNetwork 0.5+ prefix.\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure\ncmake --install build\ncmake -S tests/consumer -B build/consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/install;$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --parallel 4\nctest --test-dir build/consumer/build --output-on-failure\n```\n",
+      "language": "sh",
+      "code": "network_prefix=\"$PWD/../iiNetwork/build/package\" # Or the installed iiNetwork 0.5+ prefix.\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure\ncmake --install build\ncmake -S tests/consumer -B build/consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/install;$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --parallel 4\nctest --test-dir build/consumer/build --output-on-failure\n",
+      "closed": true
+    },
+    {
+      "id": "b000116",
+      "kind": "blank",
+      "start_line": 187,
+      "end_line": 187,
+      "raw": "\n"
+    },
+    {
+      "id": "b000117",
+      "kind": "paragraph",
+      "start_line": 188,
+      "end_line": 188,
+      "raw": "It runs the same verification as `INSTALL_PREFIX=... ./install.sh`. The install target is `iiWebServer::iiWebServer`, the public headers are `src/iiWebServer.h`, `src/WebServer.h`, `src/PairingLink.h`, and `src/iiWebServerExport.h`. It does not create circular references between headers. It uses iOS and `BUILD_SHARED_LIBS=OFF` in `BUILD_TESTING=OFF`. It maintains the existing `helloWorld()` ABI. All build artifacts are placed under `build/`.\n"
+    },
+    {
+      "id": "b000118",
+      "kind": "blank",
+      "start_line": 189,
+      "end_line": 189,
+      "raw": "\n"
+    },
+    {
+      "id": "b000119",
+      "kind": "html",
+      "start_line": 190,
+      "end_line": 190,
+      "raw": "<a id=\"의존성-검토\"></a>\n"
+    },
+    {
+      "id": "b000120",
+      "kind": "blank",
+      "start_line": 191,
+      "end_line": 191,
+      "raw": "\n"
+    },
+    {
+      "id": "b000121",
+      "kind": "heading",
+      "start_line": 192,
+      "end_line": 192,
+      "raw": "## Dependency Review\n",
+      "level": 2,
+      "title": "Dependency Review"
+    },
+    {
+      "id": "b000122",
+      "kind": "blank",
+      "start_line": 193,
+      "end_line": 193,
+      "raw": "\n"
+    },
+    {
+      "id": "b000123",
+      "kind": "paragraph",
+      "start_line": 194,
+      "end_line": 194,
+      "raw": "The SDK requires C++23, iiNetwork 0.5+, iiSDKCore, iiJson, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.\n"
+    },
+    {
+      "id": "b000124",
+      "kind": "blank",
+      "start_line": 195,
+      "end_line": 195,
+      "raw": "\n"
+    },
+    {
+      "id": "b000125",
+      "kind": "paragraph",
+      "start_line": 196,
+      "end_line": 196,
+      "raw": "`Address` is `ii::network::IpAddress`; use `Address::parse()`, `Address::loopback()` or `Address::any()`. `TlsConfiguration` is `ii::network::TlsOptions`; configure `policy.identity` and `policy.ca_file` directly. LAN pins use iiNetwork's explicit `trusted_certificate_sha256` policy, with certificate validity and purpose checks retained. See [network implementation and consumer migration](docs/Network.md).\n"
+    },
+    {
+      "id": "b000126",
+      "kind": "blank",
+      "start_line": 197,
+      "end_line": 197,
+      "raw": "\n"
+    },
+    {
+      "id": "b000127",
+      "kind": "html",
+      "start_line": 198,
+      "end_line": 198,
+      "raw": "<a id=\"라이선스\"></a>\n"
+    },
+    {
+      "id": "b000128",
+      "kind": "blank",
+      "start_line": 199,
+      "end_line": 199,
+      "raw": "\n"
+    },
+    {
+      "id": "b000129",
+      "kind": "heading",
+      "start_line": 200,
+      "end_line": 200,
+      "raw": "## License\n",
+      "level": 2,
+      "title": "License"
+    },
+    {
+      "id": "b000130",
+      "kind": "blank",
+      "start_line": 201,
+      "end_line": 201,
+      "raw": "\n"
+    },
+    {
+      "id": "b000131",
+      "kind": "paragraph",
+      "start_line": 202,
+      "end_line": 202,
+      "raw": "SPDX-License-Identifier: MIT. Its own code follows [LICENSE](LICENSE). It does not replace the separate licenses of external libraries such as Qt.\n"
+    },
+    {
+      "id": "b000132",
+      "kind": "blank",
+      "start_line": 203,
+      "end_line": 203,
+      "raw": "\n"
+    },
+    {
+      "id": "b000133",
+      "kind": "paragraph",
+      "start_line": 204,
+      "end_line": 204,
+      "raw": "`ii-web-server` is a diagnostic executable that uses the same SDK even without a consumer app. It hosts `--root`, `--relay`, `--id`, and `--credential-file`, reads a chunk via `--peer ID --path relative/path --read`, or reads the list without `--read`. It passes LAN and `--certificate` together to the public `--key` listener. It can force a remote path via `--no-local`. The credential file is set to be readable only by the owner and is not included in version control. `iiWebServer.process_hosting` verifies the actual file bytes from both paths via the HTTP authentication verification server and separate relay, host, and client processes.\n"
+    },
+    {
+      "id": "b000134",
+      "kind": "blank",
+      "start_line": 205,
+      "end_line": 205,
+      "raw": "\n"
+    },
+    {
+      "id": "b000135",
+      "kind": "heading",
+      "start_line": 206,
+      "end_line": 206,
+      "raw": "## Source layout\n",
+      "level": 2,
+      "title": "Source layout"
+    },
+    {
+      "id": "b000136",
+      "kind": "blank",
+      "start_line": 207,
+      "end_line": 207,
+      "raw": "\n"
+    },
+    {
+      "id": "b000137",
+      "kind": "paragraph",
+      "start_line": 208,
+      "end_line": 208,
+      "raw": "Implementation files and their headers live together under `src/`. Existing feature and platform subdirectories retain their responsibilities. Build configuration, tests, documentation, resources, and maintenance scripts remain at the project root. Configure and build using the repository-local `build/` directory.\n"
+    },
+    {
+      "id": "b000138",
+      "kind": "blank",
+      "start_line": 209,
+      "end_line": 209,
+      "raw": "\n"
+    },
+    {
+      "id": "b000139",
+      "kind": "html",
+      "start_line": 210,
+      "end_line": 210,
+      "raw": "<a id=\"계정-graphql-인증\"></a>\n"
+    },
+    {
+      "id": "b000140",
+      "kind": "blank",
+      "start_line": 211,
+      "end_line": 211,
+      "raw": "\n"
+    },
+    {
+      "id": "b000141",
+      "kind": "heading",
+      "start_line": 212,
+      "end_line": 212,
+      "raw": "## Account GraphQL Authentication\n",
+      "level": 2,
+      "title": "Account GraphQL Authentication"
+    },
+    {
+      "id": "b000142",
+      "kind": "blank",
+      "start_line": 213,
+      "end_line": 213,
+      "raw": "\n"
+    },
+    {
+      "id": "b000143",
+      "kind": "paragraph",
+      "start_line": 214,
+      "end_line": 214,
+      "raw": "`SessionAuthenticator` and `--session-url` receive the GraphQL endpoint. The default is `https://iisacc.com/Account/GraphQL`. The `POST` body is `{\"query\":\"query AccountSession { accountSession { account { sub } } }\"}` and only reads `data.accountSession.account.sub` as the authentication subject. It does not authenticate partial responses with errors, null accounts, incorrect Content-Type, or redirects. It updates the relay and server endpoint together.\n"
+    },
+    {
+      "id": "b000144",
+      "kind": "blank",
+      "start_line": 215,
+      "end_line": 215,
+      "raw": "\n"
+    },
+    {
+      "id": "b000145",
+      "kind": "paragraph",
+      "start_line": 216,
+      "end_line": 216,
+      "raw": "LAN applications can require mutual account proofs with `setPairingAuthentication`. Proofs bind both peer IDs, pinned certificate, one-use offer and client nonce with separate client/host roles. Authentication precedes Files access. Legacy clients fail closed when callbacks are installed.\n"
+    },
+    {
+      "id": "b000146",
+      "kind": "blank",
+      "start_line": 217,
+      "end_line": 217,
+      "raw": "\n"
+    },
+    {
+      "id": "b000147",
+      "kind": "html",
+      "start_line": 218,
+      "end_line": 218,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000148",
+      "kind": "heading",
+      "start_line": 219,
+      "end_line": 219,
+      "raw": "## Documentation entry points\n",
+      "level": 2,
+      "title": "Documentation entry points"
+    },
+    {
+      "id": "b000149",
+      "kind": "blank",
+      "start_line": 220,
+      "end_line": 220,
+      "raw": "\n"
+    },
+    {
+      "id": "b000150",
+      "kind": "list",
+      "start_line": 221,
+      "end_line": 224,
+      "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Human overview: this English `README.md`.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Agent instructions: [AGENT.md](AGENT.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Human documentation: [documentation index](docs/README.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Structured agent documentation: [agent index](docs/agent-index.json).",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000151",
+      "kind": "html",
+      "start_line": 225,
+      "end_line": 225,
+      "raw": "<!-- workspace-docs:readme:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiWebServer",
+      "anchor": "iiwebserver",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000011",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "File presentation ownership",
+      "anchor": "file-presentation-ownership",
+      "start_line": 25
+    },
+    {
+      "block_id": "b000017",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "0.6.0: Binary transmission of LAN  file body content",
+      "anchor": "060-binary-transmission-of-lan--file-body-content",
+      "start_line": 38
+    },
+    {
+      "block_id": "b000025",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "0.5.0: Standard file transfer · NAS · Cloud · Server hosting",
+      "anchor": "050-standard-file-transfer--nas--cloud--server-hosting",
+      "start_line": 46
+    },
+    {
+      "block_id": "b000033",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "0.4.1: direct LAN pairing of the scanned device",
+      "anchor": "041-direct-lan-pairing-of-the-scanned-device",
+      "start_line": 54
+    },
+    {
+      "block_id": "b000041",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Directly LAN QR pairing",
+      "anchor": "directly-lan-qr-pairing",
+      "start_line": 62
+    },
+    {
+      "block_id": "b000057",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Composition and trust boundary",
+      "anchor": "composition-and-trust-boundary",
+      "start_line": 79
+    },
+    {
+      "block_id": "b000067",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Consumer app API",
+      "anchor": "consumer-app-api",
+      "start_line": 92
+    },
+    {
+      "block_id": "b000077",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "QR pairing",
+      "anchor": "qr-pairing",
+      "start_line": 120
+    },
+    {
+      "block_id": "b000093",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "File Contract",
+      "anchor": "file-contract",
+      "start_line": 142
+    },
+    {
+      "block_id": "b000105",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Run relay",
+      "anchor": "run-relay",
+      "start_line": 160
+    },
+    {
+      "block_id": "b000113",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Build and Install",
+      "anchor": "build-and-install",
+      "start_line": 172
+    },
+    {
+      "block_id": "b000121",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Dependency Review",
+      "anchor": "dependency-review",
+      "start_line": 192
+    },
+    {
+      "block_id": "b000129",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "License",
+      "anchor": "license",
+      "start_line": 200
+    },
+    {
+      "block_id": "b000135",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Source layout",
+      "anchor": "source-layout",
+      "start_line": 206
+    },
+    {
+      "block_id": "b000141",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Account GraphQL Authentication",
+      "anchor": "account-graphql-authentication",
+      "start_line": 212
+    },
+    {
+      "block_id": "b000148",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Documentation entry points",
+      "anchor": "documentation-entry-points",
+      "start_line": 219
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 4,
+        "text": "`find_package(iiWebServer CONFIG REQUIRED COMPONENTS Http)` and",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000035",
+        "line": 56,
+        "text": "`createDeviceOffer(peerId)` creates one-time connection information bound to the device selected through discovery. After `join()`, `phase()` on both sides becomes `confirming`, and `verificationCode()` displays the same 12-digit hex code in 4-4-4 format. No Files list or bytes are returned before the host calls `confirmDevice()`. The code is bound to the SHA-256 of the host's TLS certificate fingerprint, one-time key, client random nonce, and device ID. Another device ID, duplicate connections, and expired or canceled requests are rejected. Confirmation waits for at most 60 seconds. `pairedDeviceIds()` provides currently connected devices on both host and client, allowing connection state to appear in the list. Discovery information is not proof of trust; the consumer UI must compare the codes on both sides and receive explicit connection confirmation from the host.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000061",
+        "line": 86,
+        "text": "Authentication cookies are delivered only to trusted relays and account verification servers. Other devices receive 256-bit random one-time access tokens. Device local certificates SHA-256 are obtained from the trusted relay list and compared against the actual TLS certificate. Certificate errors are never ignored unconditionally. Relays authenticate using the default trusted CA. Non-TLS URLs and listeners are allowed only on numeric loopback addresses.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000073",
+        "line": 116,
+        "text": "Handlers and signals are executed in the owning Qt thread. Large tasks must be separated into the application's asynchronous storage layer. Requests already sent are not re-executed via path switching. If a write response breaks, the caller must check the results as a list.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000081",
+        "line": 124,
+        "text": "`PairingLink` is responsible for the creation and strict parsing of `society://pair?v=1&relay=...&host=...&code=...`. It checks version, field duplication, host ID, 256-bit code, and the relay's TLS URL, and does not make network requests. The consumer app must compare the relay contained in the code against independent trusted settings. Sending the account cookie to that server solely based on parsing success is not allowed.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000087",
+        "line": 136,
+        "text": "The code is a hex representation of 32 bytes generated by the OS random generator. Server memory stores only the code's SHA-256. Its lifetime is the shorter of 60 seconds and the host authentication's remaining lifetime when issued. It is consumed immediately on claim. Confirmation waits at most 15 seconds and never beyond the QR expiry. Only registered hosts and clients for the same account and service connect. Another account, another host ID, and reuse are rejected with the same error. Connection closure, authentication failure, host unregistration, reissuance, cancellation, or expiry discards the corresponding pending state. Issuance and claim attempts are limited per session to 6 per 30 seconds. The server does not store persistent device relationships or account cookies on disk.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000097",
+        "line": 152,
+        "text": "Integer size and offset are passed as strings to avoid JSON floating-point loss. Downloads must first receive `stat`, then all chunks with the same `version`. Modified files fail with `file_changed`. Directory page cursors must restart when the directory changes. Delete, overwrite, large upload, synchronization conflict resolution, and OS mount are not included in this API.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000099",
+        "line": 154,
+        "text": "Unix file provision uses `openat`, `O_NOFOLLOW`, directory FD, and inode/device checks. Rejects symbolic links, parent path moves, redirections, and replaced roots. New files are published via `linkat` after completing a temporary file in the same directory, so they do not overwrite existing files. Applications also check contracts such as root guard Society UUID. On Windows, requests are rejected until a safe native handle implementation is available by default `FileShare`. Transfer and relay layers and custom handlers are separated based on Qt.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000109",
+        "line": 168,
+        "text": "When using an existing HTTPS reverse proxy, bind the relay to `127.0.0.1:9443` and expose only WSS externally. The proxy supports WebSocket upgrade and connection lifetime must be longer than 60 seconds. Consumer apps must set the public relay URL. Implementation and loopback verification in this repository are not evidence of deployment on public servers or execution in other physical networks. Do not create new paid infrastructure.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000123",
+        "line": 194,
+        "text": "The SDK requires C++23, iiNetwork 0.5+, iiSDKCore, iiJson, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000107",
+        "language": "sh",
+        "code": "build/ii-server-relay --address 0.0.0.0 --port 9443 \\\n  --certificate /secure/fullchain.pem --key /secure/private-key.pem \\\n  --session-url https://iisacc.com/Account/GraphQL\n"
+      },
+      {
+        "block_id": "b000115",
+        "language": "sh",
+        "code": "network_prefix=\"$PWD/../iiNetwork/build/package\" # Or the installed iiNetwork 0.5+ prefix.\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure\ncmake --install build\ncmake -S tests/consumer -B build/consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/install;$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --parallel 4\nctest --test-dir build/consumer/build --output-on-failure\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000003",
+        "label": "HTTP API and hybrid deployment",
+        "target": "docs/HttpServer.md",
+        "kind": "relative",
+        "line": 11
+      },
+      {
+        "block_id": "b000003",
+        "label": "Nginx configuration",
+        "target": "deploy/nginx/iiwebserver.conf",
+        "kind": "relative",
+        "line": 12
+      },
+      {
+        "block_id": "b000005",
+        "label": "Windows build and execution",
+        "target": "docs/WindowsBuildAndRun.md",
+        "kind": "relative",
+        "line": 14
+      },
+      {
+        "block_id": "b000009",
+        "label": "network migration and current verification",
+        "target": "docs/Network.md",
+        "kind": "relative",
+        "line": 21
+      },
+      {
+        "block_id": "b000029",
+        "label": "support matrix, C++   API , command-line execution, and dependencies and validation",
+        "target": "docs/FileTransfer.md",
+        "kind": "relative",
+        "line": 50
+      },
+      {
+        "block_id": "b000125",
+        "label": "network implementation and consumer migration",
+        "target": "docs/Network.md",
+        "kind": "relative",
+        "line": 196
+      },
+      {
+        "block_id": "b000131",
+        "label": "LICENSE",
+        "target": "LICENSE",
+        "kind": "relative",
+        "line": 202
+      },
+      {
+        "block_id": "b000150",
+        "label": "AGENT.md",
+        "target": "AGENT.md",
+        "kind": "relative",
+        "line": 222
+      },
+      {
+        "block_id": "b000150",
+        "label": "documentation index",
+        "target": "docs/README.md",
+        "kind": "relative",
+        "line": 223
+      },
+      {
+        "block_id": "b000150",
+        "label": "agent index",
+        "target": "docs/agent-index.json",
+        "kind": "relative",
+        "line": 224
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000083",
+        "columns": [
+          "Peer API",
+          "Role"
+        ],
+        "rows": [
+          [
+            "`createPairingOffer()`",
+            "The connected host issues a one-time code. Events are distinguished by the returned request ID."
+          ],
+          [
+            "`claimPairingOffer(code, expectedHost)`",
+            "The connected client submits the QR code and host ID."
+          ],
+          [
+            "`confirmPairing(pairingId)`",
+            "The client confirms connection completion after actual host access verification."
+          ],
+          [
+            "`cancelPairing(requestId)`",
+            "Cancel its own request. Already consumed QR codes cannot be recovered."
+          ],
+          [
+            "`pairingEvent(QJsonObject)`",
+            "Receives `id`, `status`, and data for each stage."
+          ]
+        ]
+      },
+      {
+        "block_id": "b000095",
+        "columns": [
+          "op",
+          "Request Fields",
+          "Response"
+        ],
+        "rows": [
+          [
+            "`list`",
+            "`path`, optional string `cursor`",
+            "Maximum 256 `entries`, `nextCursor`"
+          ],
+          [
+            "`stat`",
+            "`path`",
+            "String `size`, opaque `version`"
+          ],
+          [
+            "`read`",
+            "`path`, string `offset`, optional `version`",
+            "Maximum 256 KiB base64 `data`, `size`, `offset`, `version`, `eof`"
+          ],
+          [
+            "`write`",
+            "`path`, base64 `data`",
+            "Atomically create new files only, maximum 256 KiB, preserve existing files"
+          ],
+          [
+            "`mkdir`",
+            "`path`",
+            "New directory under existing parent"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

@@ -1,0 +1,754 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:0f47d7410c2c9fed92a91c224281cd6d830a653dac52a24cc83e65cdd3f0a512",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiWebServer",
+    "name": "iiWebServer",
+    "root": "SDK/iiWebServer",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/HttpServer.md",
+    "sha256": "ddfc322fcf0a0fb52c605fa6ddc1af3285c585fab8b106c8c9ced748595aa5e1",
+    "bytes": 10445,
+    "line_count": 100,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "임베디드 HTTP 서버와 Nginx 배포",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 임베디드 HTTP 서버와 Nginx 배포\n",
+      "level": 1,
+      "title": "임베디드 HTTP 서버와 Nginx 배포"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "`iiNetwork`는 비동기 소켓·TLS·HTTP 파싱·연결 수명을 담당한다. `iiWebServer::Http`는 그 위에서 애플리케이션 라우팅과 미들웨어를 제공한다. 공개 인터넷에서는 Nginx가 TLS 종료, 정적 파일, 요청 제한 및 프록시를 담당하고, 로컬 앱은 같은 HTTP 서버를 직접 구동한다. 성공 기준은 동일한 iiSDK 애플리케이션 기능을 별도 서버 기술 스택 없이 제공하는 것이다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "네이티브 소비자는 `<iiWebServer/HttpServer.h>`와 `iiWebServer::Http`를 사용한다. 기존 QObject 기반 LAN·릴레이·파일 전송은 `Compatibility` 계층이며 기본 빌드에서 기존 소비자의 동작을 유지한다. HTTP 핵심 타깃은 Qt와 iiFileProvider에 의존하지 않는다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "heading",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "## 소비 API\n",
+      "level": 2,
+      "title": "소비 API"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "fenced_code",
+      "start_line": 9,
+      "end_line": 12,
+      "raw": "```cmake\nfind_package(iiWebServer 0.6 CONFIG REQUIRED COMPONENTS Http)\ntarget_link_libraries(my_application PRIVATE iiWebServer::Http)\n```\n",
+      "language": "cmake",
+      "code": "find_package(iiWebServer 0.6 CONFIG REQUIRED COMPONENTS Http)\ntarget_link_libraries(my_application PRIVATE iiWebServer::Http)\n",
+      "closed": true
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "fenced_code",
+      "start_line": 14,
+      "end_line": 27,
+      "raw": "```cpp\n#include <iiWebServer/HttpServer.h>\n\nint main() {\n    ii::runtime::EventLoop loop;\n    iiWebServer::HttpServer server(loop);\n    auto configured = server.route(\"GET\", \"/items/{id}\",\n        [](const iiWebServer::HttpRequest&, const iiWebServer::RouteParameters& parameters) {\n            return iiWebServer::HttpResponse{200, {{\"Content-Type\", \"text/plain\"}}, parameters.at(\"id\")};\n        });\n    if (!configured || !server.listen({ii::network::IpAddress::loopback(), 8080})) return 1;\n    loop.run(); // GUI 호스트는 기존 호스트 루프에서 loop.poll()을 구동한다.\n}\n```\n",
+      "language": "cpp",
+      "code": "#include <iiWebServer/HttpServer.h>\n\nint main() {\n    ii::runtime::EventLoop loop;\n    iiWebServer::HttpServer server(loop);\n    auto configured = server.route(\"GET\", \"/items/{id}\",\n        [](const iiWebServer::HttpRequest&, const iiWebServer::RouteParameters& parameters) {\n            return iiWebServer::HttpResponse{200, {{\"Content-Type\", \"text/plain\"}}, parameters.at(\"id\")};\n        });\n    if (!configured || !server.listen({ii::network::IpAddress::loopback(), 8080})) return 1;\n    loop.run(); // GUI 호스트는 기존 호스트 루프에서 loop.poll()을 구동한다.\n}\n",
+      "closed": true
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 28,
+      "end_line": 28,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 29,
+      "end_line": 29,
+      "raw": "라우트와 미들웨어는 리스너를 시작하기 전에 등록한다. 중지 후 연결이 모두 정리되면 다시 구성할 수 있다. 실행 중인 서버에 `listen()`을 다시 호출하여 기존 요청을 중단시키지 않는다. 미들웨어는 등록 순서대로 진입하고, `next(request)` 뒤의 처리는 역순으로 실행한다. 인증 미들웨어는 `next`를 호출하지 않고 응답하여 단락시킬 수 있다. 체인은 최대 64개이며 `next`는 현재 호출 안에서 동기적으로 사용한다. 라우트 매개변수는 `{id}` 형식이며 정적 경로가 매개변수 경로보다 우선한다. 잘못된 경로·메서드·중복 라우트는 iiNetwork 라우터의 검증을 따른다.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 30,
+      "end_line": 30,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 31,
+      "end_line": 31,
+      "raw": "요청은 연결당 한 개이고 응답 후 닫는다. HTTP/1.0·HTTP/1.1의 origin-form과 Content-Length 프레이밍을 지원한다. 기본 한도는 연결 64개, 헤더 16 KiB, 본문·응답 각각 2 MiB, 요청 수신·응답 전송 각각 10초이다. 중복 framing, 모호한 authority, transfer coding, pipelining과 Expect는 거부한다. Nginx의 요청 버퍼링이 외부 chunked 업로드를 완전히 받은 뒤 백엔드로 전달한다. 백엔드 자체의 chunked 요청, keep-alive, 스트리밍 응답, HTTP/2·3은 현재 계약에 포함하지 않는다.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 32,
+      "end_line": 32,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 33,
+      "end_line": 33,
+      "raw": "핸들러와 미들웨어는 이벤트 루프 소유 스레드에서 동기 실행된다. 예외는 내부 상세를 노출하지 않는 500 응답으로 정리한다. 긴 이미지 처리·모델 실행은 iiSDKCore 작업 큐에 넘기고 작업 ID를 반환하는 애플리케이션 프로토콜을 구성한다. HTTP 서버가 비즈니스 로직이나 Dreamscapes 엔진을 다시 구현하지 않는다.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 34,
+      "end_line": 34,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "heading",
+      "start_line": 35,
+      "end_line": 35,
+      "raw": "## 종료와 신뢰 경계\n",
+      "level": 2,
+      "title": "종료와 신뢰 경계"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 36,
+      "end_line": 36,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 37,
+      "end_line": 37,
+      "raw": "`shutdown(grace)`는 신규 연결을 막고 이미 들어온 요청과 응답을 마무리한다. 호스트는 `draining()`이 거짓이 될 때까지 루프를 계속 구동한다. 최초 유예 기한은 반복 호출로 연장되지 않으며, 기한을 넘기면 남은 연결을 닫는다. `close()`와 소멸자는 즉시 닫는다. `listenLocal()`은 네이티브 로컬 소켓을 사용하므로 같은 호스트의 Nginx upstream을 Unix 소켓으로 구성할 수도 있다.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 38,
+      "end_line": 38,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 39,
+      "end_line": 39,
+      "raw": "요청의 `peer_endpoint`, `local_endpoint`, `secure`는 실제 백엔드 연결의 정보이다. `X-Forwarded-*`나 `Forwarded` 헤더를 인증·권한·원격 IP 증거로 자동 승격하지 않는다. Nginx 예제는 외부에서 받은 전달 헤더를 실제 접속 정보로 교체하고 `Forwarded`를 제거한다. 외부 canonical origin과 계정 권한은 애플리케이션의 명시적 설정·인증 미들웨어가 소유한다.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "heading",
+      "start_line": 41,
+      "end_line": 41,
+      "raw": "## 로컬과 공개 배포\n",
+      "level": 2,
+      "title": "로컬과 공개 배포"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 42,
+      "end_line": 42,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 43,
+      "end_line": 43,
+      "raw": "참조 실행 파일은 다음과 같이 실행한다.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 44,
+      "end_line": 44,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "fenced_code",
+      "start_line": 45,
+      "end_line": 47,
+      "raw": "```sh\n./build/native-http/build/ii-http-server --address 127.0.0.1 --port 8080\n```\n",
+      "language": "sh",
+      "code": "./build/native-http/build/ii-http-server --address 127.0.0.1 --port 8080\n",
+      "closed": true
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 48,
+      "end_line": 48,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 49,
+      "end_line": 49,
+      "raw": "`GET /health`와 `POST /api/echo`만 제공하는 참조 호스트이다. `--max-body-bytes`, `--request-timeout-ms`, `--grace-ms`로 배포별 한도를 설정하고 SIGINT/SIGTERM에서 정상 종료한다. 실제 애플리케이션은 동일한 라이브러리에 자신의 라우트와 공통 iiSDK 모듈을 연결한다. GUI·헤드리스 모드의 선택은 제품 실행 진입점의 책임이다.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 50,
+      "end_line": 50,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 51,
+      "end_line": 51,
+      "raw": "공개 환경에서는 `deploy/nginx/iiwebserver.conf`를 기존 Nginx의 `http {}` 블록 안에 포함한다. 도메인, 인증서·키, 공개 정적 디렉터리를 실제 배포 값으로 변경하고, 백엔드는 기본 `127.0.0.1:8080` 또는 같은 호스트의 로컬 소켓으로 둔다. TLS 인증서의 발급·갱신·파일 권한과 정적 파일 배포는 Nginx 운영 단계에서 관리한다. 예제의 `http2 on` 구문은 SSL·HTTP/2 모듈이 있는 Nginx 1.25.1 이상을 요구한다. HTTP/3은 해당 Nginx 빌드와 UDP 진입점이 필요한 선택적 운영 기능이며 이 예제에서 활성화하지 않는다.\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 52,
+      "end_line": 52,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "paragraph",
+      "start_line": 53,
+      "end_line": 53,
+      "raw": "Nginx는 TLS 종료, HTTP/2, 정적 파일, IP별 요청 제한을 처리한다. 백엔드의 본문 한도와 프록시의 `client_max_body_size`는 함께 관리한다. 프록시 자동 재시도는 꺼서 쓰기 요청을 다른 upstream에 재실행하지 않는다. 기존 WebSocket 릴레이는 별도 리스너이며, 이를 공개할 때는 해당 location에 Upgrade/Connection 전달을 명시하는 별도 WebSocket 프록시 구성을 사용한다.\n"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 54,
+      "end_line": 54,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "heading",
+      "start_line": 55,
+      "end_line": 55,
+      "raw": "## 빌드와 검증\n",
+      "level": 2,
+      "title": "빌드와 검증"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 56,
+      "end_line": 56,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "paragraph",
+      "start_line": 57,
+      "end_line": 57,
+      "raw": "Qt 없는 전체 빌드는 다음과 같다. 모든 산출물은 `build/` 아래에 둔다.\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 58,
+      "end_line": 58,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "fenced_code",
+      "start_line": 59,
+      "end_line": 67,
+      "raw": "```sh\ncmake -S . -B build/native-http/build -DCMAKE_BUILD_TYPE=Release \\\n  -DIIWEBSERVER_BUILD_COMPATIBILITY=OFF -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"../iiNetwork/build/package;$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/native-http/build/package\"\ncmake --build build/native-http/build --parallel 3\nctest --test-dir build/native-http/build --output-on-failure\ncmake --install build/native-http/build\n```\n",
+      "language": "sh",
+      "code": "cmake -S . -B build/native-http/build -DCMAKE_BUILD_TYPE=Release \\\n  -DIIWEBSERVER_BUILD_COMPATIBILITY=OFF -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"../iiNetwork/build/package;$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/native-http/build/package\"\ncmake --build build/native-http/build --parallel 3\nctest --test-dir build/native-http/build --output-on-failure\ncmake --install build/native-http/build\n",
+      "closed": true
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 68,
+      "end_line": 68,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "paragraph",
+      "start_line": 69,
+      "end_line": 69,
+      "raw": "기본 호환 빌드에서도 소비자가 `COMPONENTS Http`만 요청하면 Qt와 iiFileProvider를 검색하거나 호환 타깃을 import하지 않는다. 기존 `find_package(iiWebServer)`와 `iiWebServer::iiWebServer` 사용자는 기본 호환 계층을 유지한다.\n"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 70,
+      "end_line": 70,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 71,
+      "end_line": 71,
+      "raw": "iiNetwork를 먼저 같은 소스의 헤더·정적 라이브러리로 빌드·설치한다. 새 `ServerLimits`와 종료 API를 제공하는 `iiNetwork_HTTP_SERVER_LIFECYCLE` 표시가 없는 이전 패키지는 구성 단계에서 거부한다. `IINETWORK_PREFIX`는 설치 스크립트의 의존성 위치를 지정하며, `IIWEBSERVER_BUILD_COMPATIBILITY=OFF INSTALL_PREFIX=... ./install.sh`는 Qt 없는 빌드와 네이티브 설치 소비자를 검사한다.\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 72,
+      "end_line": 72,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 73,
+      "end_line": 73,
+      "raw": "`tests/http.cpp`는 실제 TCP로 라우팅·미들웨어·바이너리 본문·본문/헤더 한도·응답 프레이밍 경계·요청 기한·예외·콜백 중 소멸을 검증한다. `tests/http_cli.py`는 참조 프로세스의 실제 요청과 SIGTERM drain을 확인한다. `tests/http-consumer`는 설치된 Http 컴포넌트를 Qt·Provider 패키지 검색 없이 빌드한다. `IIWEBSERVER_TEST_NGINX`에 Nginx 실행 파일을 지정하면 `tests/nginx_http.py`가 TLS/HTTP2, 정적 파일, chunked 업로드 버퍼링, 본문·요청 속도 제한을 같은 참조 호스트에 연결하여 검증한다. 이 통합 검사는 HTTP/2 지원 curl과 OpenSSL CLI도 요구한다. Nginx는 SDK의 빌드·실행 의존성이 아니다.\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 74,
+      "end_line": 74,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "heading",
+      "start_line": 75,
+      "end_line": 75,
+      "raw": "### 2026-10-23 검증 결과\n",
+      "level": 3,
+      "title": "2026-10-23 검증 결과"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 76,
+      "end_line": 76,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "paragraph",
+      "start_line": 77,
+      "end_line": 77,
+      "raw": "macOS arm64에서 다음 결과를 확인하였다. 실행 결과는 Windows·Linux·모바일의 네이티브 실행 증거를 포함하지 않는다.\n"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 78,
+      "end_line": 78,
+      "raw": "\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "table",
+      "start_line": 79,
+      "end_line": 87,
+      "raw": "| 검사 | 결과 |\n| --- | --- |\n| iiNetwork Release 전체 회귀 | 32/32 통과 |\n| Qt·Provider 검색을 비활성화한 HTTP 빌드 | 실제 Nginx 1.30.6 통합을 포함하여 5/5 통과 |\n| 호환 빌드의 HTTP·LAN·호스팅·페어링·전송 등 선택 회귀 | 11/11 통과 |\n| 네이티브 패키지의 독립 Http 소비자 | 3/3 통과 |\n| 호환 패키지의 독립 Http 소비자 | Qt·Provider 검색을 비활성화하여 3/3 통과 |\n| 기존 기본 컴포넌트 소비자 | 별도 설치 패키지로 구성·빌드·실행 통과 |\n| 양쪽 모듈의 정상 종료·HTTP 수명 ASan/UBSan | 6/6 통과 |\n",
+      "columns": [
+        "검사",
+        "결과"
+      ],
+      "rows": [
+        [
+          "iiNetwork Release 전체 회귀",
+          "32/32 통과"
+        ],
+        [
+          "Qt·Provider 검색을 비활성화한 HTTP 빌드",
+          "실제 Nginx 1.30.6 통합을 포함하여 5/5 통과"
+        ],
+        [
+          "호환 빌드의 HTTP·LAN·호스팅·페어링·전송 등 선택 회귀",
+          "11/11 통과"
+        ],
+        [
+          "네이티브 패키지의 독립 Http 소비자",
+          "3/3 통과"
+        ],
+        [
+          "호환 패키지의 독립 Http 소비자",
+          "Qt·Provider 검색을 비활성화하여 3/3 통과"
+        ],
+        [
+          "기존 기본 컴포넌트 소비자",
+          "별도 설치 패키지로 구성·빌드·실행 통과"
+        ],
+        [
+          "양쪽 모듈의 정상 종료·HTTP 수명 ASan/UBSan",
+          "6/6 통과"
+        ]
+      ]
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 88,
+      "end_line": 88,
+      "raw": "\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "paragraph",
+      "start_line": 89,
+      "end_line": 89,
+      "raw": "두 설치 패키지의 참조 실행 파일에서도 실제 HTTP 요청·본문 제한·SIGTERM 정상 종료가 통과하였다. 설치된 네이티브 공개 헤더는 소스와 일치하며, HTTP 라이브러리·참조 호스트·독립 소비자의 실제 링크 목록에는 Qt·iiFileProvider가 없다. iiNetwork의 설치 헤더와 HTTP 서버 오브젝트도 같은 빌드 산출물임을 확인하였다.\n"
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 90,
+      "end_line": 90,
+      "raw": "\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "paragraph",
+      "start_line": 91,
+      "end_line": 91,
+      "raw": "호환 선택 실행에는 `storage`, `provider_ftp`, `provider_ftps`, `fixture_cleanup`, `protocol_processes`를 포함하지 않았다. 초기 회귀 실행에는 외부 프로세스 제한 시간 초과가 있었고 CTest의 로그 쓰기 대기도 관측하였다. 실행 파일 기동 확인 뒤 기존 CTest 제한 시간으로 다시 수행한 최종 전체 iiNetwork 결과가 위 32/32이다. 내부 HTTP 요청·응답·종료 기한은 변경하지 않았다.\n"
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 92,
+      "end_line": 92,
+      "raw": "\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "paragraph",
+      "start_line": 93,
+      "end_line": 93,
+      "raw": "재현 로그와 범위는 Workspace의 `build/iiwebserver-http/result.json` 및 `build/iiwebserver-http/verify_packages.py`에 기록한다. 검증 설치본은 `iiNetwork/build/package`, `iiWebServer/build/native-http/build/package`, `iiWebServer/build/compatibility/build/package`이며 사용자 전역 설치는 교체하지 않았다.\n"
+    },
+    {
+      "id": "b000060",
+      "kind": "blank",
+      "start_line": 94,
+      "end_line": 94,
+      "raw": "\n"
+    },
+    {
+      "id": "b000061",
+      "kind": "heading",
+      "start_line": 95,
+      "end_line": 95,
+      "raw": "## 근거\n",
+      "level": 2,
+      "title": "근거"
+    },
+    {
+      "id": "b000062",
+      "kind": "blank",
+      "start_line": 96,
+      "end_line": 96,
+      "raw": "\n"
+    },
+    {
+      "id": "b000063",
+      "kind": "list",
+      "start_line": 97,
+      "end_line": 100,
+      "raw": "- [Nginx reverse proxy와 요청 버퍼링](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)\n- [Nginx 요청 속도 제한](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html)\n- [Nginx HTTP/2 모듈](https://nginx.org/en/docs/http/ngx_http_v2_module.html)\n- [기존 WebSocket 릴레이의 프록시 경계](https://nginx.org/en/docs/http/websocket.html)\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "[Nginx reverse proxy와 요청 버퍼링](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[Nginx 요청 속도 제한](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[Nginx HTTP/2 모듈](https://nginx.org/en/docs/http/ngx_http_v2_module.html)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[기존 WebSocket 릴레이의 프록시 경계](https://nginx.org/en/docs/http/websocket.html)",
+          "checked": null
+        }
+      ]
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "임베디드 HTTP 서버와 Nginx 배포",
+      "anchor": "임베디드-http-서버와-nginx-배포",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000007",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "소비 API",
+      "anchor": "소비-api",
+      "start_line": 7
+    },
+    {
+      "block_id": "b000019",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "종료와 신뢰 경계",
+      "anchor": "종료와-신뢰-경계",
+      "start_line": 35
+    },
+    {
+      "block_id": "b000025",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "로컬과 공개 배포",
+      "anchor": "로컬과-공개-배포",
+      "start_line": 41
+    },
+    {
+      "block_id": "b000037",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "빌드와 검증",
+      "anchor": "빌드와-검증",
+      "start_line": 55
+    },
+    {
+      "block_id": "b000049",
+      "parent_id": "b000037",
+      "level": 3,
+      "title": "2026-10-23 검증 결과",
+      "anchor": "2026-10-23-검증-결과",
+      "start_line": 75
+    },
+    {
+      "block_id": "b000061",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "근거",
+      "anchor": "근거",
+      "start_line": 95
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 5,
+        "text": "네이티브 소비자는 `<iiWebServer/HttpServer.h>`와 `iiWebServer::Http`를 사용한다. 기존 QObject 기반 LAN·릴레이·파일 전송은 `Compatibility` 계층이며 기본 빌드에서 기존 소비자의 동작을 유지한다. HTTP 핵심 타깃은 Qt와 iiFileProvider에 의존하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000015",
+        "line": 31,
+        "text": "요청은 연결당 한 개이고 응답 후 닫는다. HTTP/1.0·HTTP/1.1의 origin-form과 Content-Length 프레이밍을 지원한다. 기본 한도는 연결 64개, 헤더 16 KiB, 본문·응답 각각 2 MiB, 요청 수신·응답 전송 각각 10초이다. 중복 framing, 모호한 authority, transfer coding, pipelining과 Expect는 거부한다. Nginx의 요청 버퍼링이 외부 chunked 업로드를 완전히 받은 뒤 백엔드로 전달한다. 백엔드 자체의 chunked 요청, keep-alive, 스트리밍 응답, HTTP/2·3은 현재 계약에 포함하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000017",
+        "line": 33,
+        "text": "핸들러와 미들웨어는 이벤트 루프 소유 스레드에서 동기 실행된다. 예외는 내부 상세를 노출하지 않는 500 응답으로 정리한다. 긴 이미지 처리·모델 실행은 iiSDKCore 작업 큐에 넘기고 작업 ID를 반환하는 애플리케이션 프로토콜을 구성한다. HTTP 서버가 비즈니스 로직이나 Dreamscapes 엔진을 다시 구현하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000023",
+        "line": 39,
+        "text": "요청의 `peer_endpoint`, `local_endpoint`, `secure`는 실제 백엔드 연결의 정보이다. `X-Forwarded-*`나 `Forwarded` 헤더를 인증·권한·원격 IP 증거로 자동 승격하지 않는다. Nginx 예제는 외부에서 받은 전달 헤더를 실제 접속 정보로 교체하고 `Forwarded`를 제거한다. 외부 canonical origin과 계정 권한은 애플리케이션의 명시적 설정·인증 미들웨어가 소유한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000033",
+        "line": 51,
+        "text": "공개 환경에서는 `deploy/nginx/iiwebserver.conf`를 기존 Nginx의 `http {}` 블록 안에 포함한다. 도메인, 인증서·키, 공개 정적 디렉터리를 실제 배포 값으로 변경하고, 백엔드는 기본 `127.0.0.1:8080` 또는 같은 호스트의 로컬 소켓으로 둔다. TLS 인증서의 발급·갱신·파일 권한과 정적 파일 배포는 Nginx 운영 단계에서 관리한다. 예제의 `http2 on` 구문은 SSL·HTTP/2 모듈이 있는 Nginx 1.25.1 이상을 요구한다. HTTP/3은 해당 Nginx 빌드와 UDP 진입점이 필요한 선택적 운영 기능이며 이 예제에서 활성화하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000035",
+        "line": 53,
+        "text": "Nginx는 TLS 종료, HTTP/2, 정적 파일, IP별 요청 제한을 처리한다. 백엔드의 본문 한도와 프록시의 `client_max_body_size`는 함께 관리한다. 프록시 자동 재시도는 꺼서 쓰기 요청을 다른 upstream에 재실행하지 않는다. 기존 WebSocket 릴레이는 별도 리스너이며, 이를 공개할 때는 해당 location에 Upgrade/Connection 전달을 명시하는 별도 WebSocket 프록시 구성을 사용한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000043",
+        "line": 69,
+        "text": "기본 호환 빌드에서도 소비자가 `COMPONENTS Http`만 요청하면 Qt와 iiFileProvider를 검색하거나 호환 타깃을 import하지 않는다. 기존 `find_package(iiWebServer)`와 `iiWebServer::iiWebServer` 사용자는 기본 호환 계층을 유지한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000051",
+        "line": 77,
+        "text": "macOS arm64에서 다음 결과를 확인하였다. 실행 결과는 Windows·Linux·모바일의 네이티브 실행 증거를 포함하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000029",
+        "language": "sh",
+        "code": "./build/native-http/build/ii-http-server --address 127.0.0.1 --port 8080\n"
+      },
+      {
+        "block_id": "b000041",
+        "language": "sh",
+        "code": "cmake -S . -B build/native-http/build -DCMAKE_BUILD_TYPE=Release \\\n  -DIIWEBSERVER_BUILD_COMPATIBILITY=OFF -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"../iiNetwork/build/package;$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/native-http/build/package\"\ncmake --build build/native-http/build --parallel 3\nctest --test-dir build/native-http/build --output-on-failure\ncmake --install build/native-http/build\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000063",
+        "label": "Nginx reverse proxy와 요청 버퍼링",
+        "target": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html",
+        "kind": "external",
+        "line": 97
+      },
+      {
+        "block_id": "b000063",
+        "label": "Nginx 요청 속도 제한",
+        "target": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
+        "kind": "external",
+        "line": 98
+      },
+      {
+        "block_id": "b000063",
+        "label": "Nginx HTTP/2 모듈",
+        "target": "https://nginx.org/en/docs/http/ngx_http_v2_module.html",
+        "kind": "external",
+        "line": 99
+      },
+      {
+        "block_id": "b000063",
+        "label": "기존 WebSocket 릴레이의 프록시 경계",
+        "target": "https://nginx.org/en/docs/http/websocket.html",
+        "kind": "external",
+        "line": 100
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000053",
+        "columns": [
+          "검사",
+          "결과"
+        ],
+        "rows": [
+          [
+            "iiNetwork Release 전체 회귀",
+            "32/32 통과"
+          ],
+          [
+            "Qt·Provider 검색을 비활성화한 HTTP 빌드",
+            "실제 Nginx 1.30.6 통합을 포함하여 5/5 통과"
+          ],
+          [
+            "호환 빌드의 HTTP·LAN·호스팅·페어링·전송 등 선택 회귀",
+            "11/11 통과"
+          ],
+          [
+            "네이티브 패키지의 독립 Http 소비자",
+            "3/3 통과"
+          ],
+          [
+            "호환 패키지의 독립 Http 소비자",
+            "Qt·Provider 검색을 비활성화하여 3/3 통과"
+          ],
+          [
+            "기존 기본 컴포넌트 소비자",
+            "별도 설치 패키지로 구성·빌드·실행 통과"
+          ],
+          [
+            "양쪽 모듈의 정상 종료·HTTP 수명 ASan/UBSan",
+            "6/6 통과"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

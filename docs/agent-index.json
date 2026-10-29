@@ -1,0 +1,104 @@
+{
+  "format": "iisacc.agent-document-index",
+  "schema_version": 1,
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiWebServer",
+    "name": "iiWebServer",
+    "root": "SDK/iiWebServer",
+    "kind": "sdk"
+  },
+  "documentation_root": "docs",
+  "agent_schema": "docs/agent-document.schema.json",
+  "documents": [
+    {
+      "document_id": "urn:iisacc:document:130de6bbb4986a8a9f107e57d720842cd3ca3a75daa4b55db0a415d409d2834b",
+      "source": "AGENT.md",
+      "agent_json": "docs/entrypoints/AGENT.agent.json",
+      "source_sha256": "8c8498fb23c7ed1ff6186e16a1c92f62212b53e5144c9ef11decdc909760704b",
+      "role": "instructions"
+    },
+    {
+      "document_id": "urn:iisacc:document:8a59e762d6237a45cac2abe8e98a7d6393b806a5148b8e481a070f07f96fe465",
+      "source": "README.md",
+      "agent_json": "docs/entrypoints/README.agent.json",
+      "source_sha256": "86f79a373a8f0ecdd6e6f8b4fa4a74701e13ff75ac44bbf6bd2c4f9f06cb1038",
+      "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:34b646d5a3e477cc1b15788497fb3eb0e6fb13f15267e6f59131c78c5970e6a8",
+      "source": "docs/FILE_PROVIDER.md",
+      "agent_json": "docs/FILE_PROVIDER.agent.json",
+      "source_sha256": "cfa99a6445bcf17a454bffc63622d81d86e435ea90629662e9127bd00ab9d24e",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:3b06a883dd5d3d1757377d997c5ffe9d88c737cb1de87e542301e70bf74a0682",
+      "source": "docs/FileTransfer.md",
+      "agent_json": "docs/FileTransfer.agent.json",
+      "source_sha256": "07e4e6ad20bc7086ed3e9d075187c29f612040e208ce0053a34a910596e84014",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:0f47d7410c2c9fed92a91c224281cd6d830a653dac52a24cc83e65cdd3f0a512",
+      "source": "docs/HttpServer.md",
+      "agent_json": "docs/HttpServer.agent.json",
+      "source_sha256": "ddfc322fcf0a0fb52c605fa6ddc1af3285c585fab8b106c8c9ced748595aa5e1",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:39a7ef37b6274f1cba0526bba7dade51018e52792bf15a3d0cdaa7481cdf7560",
+      "source": "docs/Network.md",
+      "agent_json": "docs/Network.agent.json",
+      "source_sha256": "1659659a88dd36cf20f7141b31935c677a31ded095b8b52569992870b1ffed0a",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:27a5256e7924def7a2461d30e8fe12c57cc4c81be101f7488059b635ddf40346",
+      "source": "docs/README.md",
+      "agent_json": "docs/README.agent.json",
+      "source_sha256": "c0ab24c76d72681a89ecb342e18dd46c664590fcd4ca4428d279af27703af73c",
+      "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:a5365a4ada5d74152b23254dc9780f74443cedf958d0926e8a5306b98b25351a",
+      "source": "docs/Windows.md",
+      "agent_json": "docs/Windows.agent.json",
+      "source_sha256": "5382fa01438b30631420734a1a9b37884352b4ab7ea8fdad76e6588569edd303",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:4f13e5b3544ddb420c65ed73ec00870a0047017836947e6809edcdb11cc5d540",
+      "source": "docs/WindowsBuildAndRun.md",
+      "agent_json": "docs/WindowsBuildAndRun.agent.json",
+      "source_sha256": "ddd70f1799dddacb6cd1a1dd9a64951c3e5775177e9a8d367355bb45a01729bd",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:a4a2e8660d432b41e668970181b246bd05b7a606ca9c20bf1c928ec719decf24",
+      "source": "docs/WindowsShutdown.md",
+      "agent_json": "docs/WindowsShutdown.agent.json",
+      "source_sha256": "b8fc394dfa776c5216fa5e4cd5f72a45a99241c24be26427c5eec94e914fa88b",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:78f59d79f4f5d08c4413ea051a661bf392ac87dd247b808c87207fbb07afce6d",
+      "source": "docs/documentation-structure.md",
+      "agent_json": "docs/documentation-structure.agent.json",
+      "source_sha256": "4e26acb5cc79aaa74a713ba8ac34d1efe9b4f8c2e63cd5e3a60efb936d019f27",
+      "role": "guide"
+    }
+  ],
+  "layout": {
+    "human_entry": "README.md",
+    "agent_entry": "AGENT.md",
+    "human_format": "markdown",
+    "agent_format": "structured_json",
+    "source_authority": "markdown"
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}
