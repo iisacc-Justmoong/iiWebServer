@@ -4,6 +4,9 @@
 #include <QPointer>
 #include <QTimer>
 #include <QTimeZone>
+#include <algorithm>
+#include <limits>
+#include <utility>
 
 namespace iiWebServer {
 using namespace protocol;
@@ -31,22 +34,42 @@ public:
     int backoff = 1000;
     explicit Private(Peer *owner) : q(owner) {
 
-        timer.setInterval(100); retry.setSingleShot(true); authTimer.setInterval(30000);
-        QObject::connect(&timer, &QTimer::timeout, q, [this] { sweep(); });
+        timer.setParent(q); timer.setObjectName(QStringLiteral("Peer.deadline"));
+        timer.setSingleShot(true); timer.setTimerType(Qt::PreciseTimer);
+        retry.setSingleShot(true); authTimer.setInterval(30000);
+        QObject::connect(&timer, &QTimer::timeout, q, [this] {
+            const QPointer<Peer> alive(q); sweep(); if (alive) schedule();
+        });
         QObject::connect(&retry, &QTimer::timeout, q, [this] { openRelay(); });
         QObject::connect(&authTimer, &QTimer::timeout, q, [this] { authenticate(); });
         QObject::connect(&relay, &WebSocket::connected, q, [this] { authenticate(); authTimer.start(); });
         QObject::connect(&relay, &WebSocket::errorOccurred, q, [this] {
             if (!running) return;
-            if (error.isEmpty()) error = relay.errorString(); emit q->stateChanged(); scheduleReconnect();
+            const QPointer<Peer> alive(q);
+            if (error.isEmpty()) error = relay.errorString(); emit q->stateChanged(); if (alive) scheduleReconnect();
         });
         QObject::connect(&relay, &WebSocket::disconnected, q, [this] {
+            const QPointer<Peer> alive(q);
             authTimer.stop(); ready = false; directory = {}; account.clear();
             resetLocal();
-            for (const auto &id : requests.keys()) finish(id, protocol::error("connection_lost"));
-            emit q->stateChanged(); emit q->peersChanged(); scheduleReconnect();
+            for (const auto &id : requests.keys()) { finish(id, protocol::error("connection_lost")); if (!alive) return; }
+            emit q->stateChanged(); if (!alive) return;
+            emit q->peersChanged(); if (alive) scheduleReconnect();
         });
         QObject::connect(&relay, &WebSocket::textMessageReceived, q, [this](const QString &m) { message(parse(m)); });
+    }
+    void schedule() {
+        if (!running) { timer.stop(); return; }
+        const auto now = QDateTime::currentDateTimeUtc(); QDateTime next;
+        const auto include = [&](const QDateTime &value) {
+            const auto deadline = value.isValid() ? value : now;
+            if (!next.isValid() || deadline < next) next = deadline;
+        };
+        for (const auto &request : std::as_const(requests)) include(request.deadline);
+        for (const auto &ticket : std::as_const(tickets)) include(ticket.expires);
+        for (const auto &link : std::as_const(links)) include(link.authenticated ? link.expires : link.deadline);
+        if (!next.isValid()) { timer.stop(); return; }
+        timer.start(int(std::clamp<qint64>(now.msecsTo(next), 0, (std::numeric_limits<int>::max)())));
     }
     void scheduleReconnect() {
         if (running && !fatal && !retry.isActive()) { retry.start(backoff); backoff = qMin(backoff * 2, 30000); }
@@ -59,11 +82,13 @@ public:
     void authenticate() { send(&relay, {{"type", "auth"}, {"credential", QString::fromUtf8(options.credential)}}); }
     void resetLocal() {
         const auto sockets = links.keys(); links.clear(); outbound.clear(); attempts.clear(); connecting.clear(); tickets.clear();
+        schedule();
         for (auto *s : sockets) { s->disconnect(q); s->abort(); s->deleteLater(); }
     }
     void finish(const QString &id, const QJsonObject &result) {
         if (!requests.contains(id)) return;
         const auto request = requests.take(id);
+        schedule();
         emit q->completed(id, result, request.transport);
     }
     void remote(const QString &peer) {
@@ -125,6 +150,7 @@ public:
         const QUrl url(a.urls.takeFirst());
         auto *s = new WebSocket(q);
         links.insert(s, {peer, a.ticket, a.fingerprint, a.expires, QDateTime::currentDateTimeUtc().addMSecs(options.localTimeoutMs), true, false});
+        schedule();
         outbound.insert(peer, s);
         if (url.scheme() == "wss") {
             TlsConfiguration tls;
@@ -143,9 +169,11 @@ public:
     void lost(WebSocket *s) {
         if (!links.contains(s)) return;
         const auto l = links.take(s);
+        schedule();
         if (outbound.value(l.peer) == s) outbound.remove(l.peer);
         s->disconnect(q); s->abort(); s->deleteLater();
-        for (const auto &id : requests.keys()) if (requests[id].socket == s) finish(id, protocol::error("connection_lost"));
+        const QPointer<Peer> alive(q);
+        for (const auto &id : requests.keys()) if (requests[id].socket == s) { finish(id, protocol::error("connection_lost")); if (!alive) return; }
         if (l.outgoing && !l.authenticated) QTimer::singleShot(0, q, [this, peer = l.peer] { nextLocal(peer); });
     }
     QJsonObject handle(const QString &peer, const QJsonObject &payload) {
@@ -159,10 +187,10 @@ public:
             if (!links.contains(s)) return;
             auto &l = links[s]; const auto m = parse(text); const auto type = m.value("type").toString();
             if (!l.authenticated) {
-                if (l.outgoing && type == "hello" && m.value("ok").toBool()) { l.authenticated = true; local(s); return; }
+                if (l.outgoing && type == "hello" && m.value("ok").toBool()) { l.authenticated = true; schedule(); local(s); return; }
                 const auto ticket = m.value("ticket").toString();
                 if (!l.outgoing && type == "hello" && ready && tickets.contains(ticket) && tickets[ticket].expires > QDateTime::currentDateTimeUtc()) {
-                    const auto t = tickets.take(ticket); l.peer = t.peer; l.expires = t.expires; l.authenticated = true;
+                    const auto t = tickets.take(ticket); l.peer = t.peer; l.expires = t.expires; l.authenticated = true; schedule();
                     send(s, {{"type", "hello"}, {"ok", true}}); return;
                 }
                 s->close(1008, "Ticket required"); return;
@@ -211,7 +239,7 @@ public:
         }
         if (type == "ticket") {
             if (tickets.size() >= 128) return;
-            tickets.insert(m.value("ticket").toString(), {m.value("peerId").toString(), QDateTime::fromMSecsSinceEpoch(m.value("expires").toString().toLongLong(), QTimeZone::UTC)}); return;
+            tickets.insert(m.value("ticket").toString(), {m.value("peerId").toString(), QDateTime::fromMSecsSinceEpoch(m.value("expires").toString().toLongLong(), QTimeZone::UTC)}); schedule(); return;
         }
         if (type == "connect") {
             const auto peer = m.value("peerId").toString(); if (!connecting.contains(peer)) return;
@@ -231,19 +259,20 @@ public:
         if (type == "response" && requests.contains(id) && requests[id].transport == "remote") finish(id, m.value("result").toObject());
     }
     void sweep() {
-        const auto now = QDateTime::currentDateTimeUtc();
-        for (const auto &id : requests.keys()) if (requests[id].deadline <= now) finish(id, protocol::error("timeout"));
-        for (const auto &ticket : tickets.keys()) if (tickets[ticket].expires <= now) tickets.remove(ticket);
+        const auto now = QDateTime::currentDateTimeUtc(); const QPointer<Peer> alive(q);
+        for (const auto &id : requests.keys()) if (!requests[id].deadline.isValid() || requests[id].deadline <= now) { finish(id, protocol::error("timeout")); if (!alive) return; }
+        for (const auto &ticket : tickets.keys()) if (!tickets[ticket].expires.isValid() || tickets[ticket].expires <= now) tickets.remove(ticket);
         for (auto *s : links.keys()) {
             const auto l = links.value(s);
-            if ((l.authenticated && l.expires <= now) || (!l.authenticated && l.deadline <= now)) lost(s);
+            const auto deadline = l.authenticated ? l.expires : l.deadline;
+            if (!deadline.isValid() || deadline <= now) { lost(s); if (!alive) return; }
         }
     }
 };
 Peer::Peer(QObject *parent) : QObject(parent), d(std::make_unique<Private>(this)) {}
 Peer::~Peer() { stop(); }
 bool Peer::start(const PeerOptions &options, RequestHandler handler) {
-    stop(); d->error.clear();
+    const QPointer<Peer> alive(this); stop(); if (!alive) return false; d->error.clear();
     if (!endpoint(options.relayUrl, "wss", "ws") || options.credential.isEmpty() || options.credential.size() > 16384
         || !identifier(options.peerId) || !identifier(options.service) || options.name.size() > 128
         || options.localTimeoutMs < 50 || options.localTimeoutMs > 10000 || options.requestTimeoutMs < 100 || options.requestTimeoutMs > 120000) {
@@ -258,19 +287,21 @@ bool Peer::start(const PeerOptions &options, RequestHandler handler) {
                 auto *s = d->server->nextPendingConnection(); s->setParent(this);
                 if (d->links.size() >= 64) { s->close(); s->deleteLater(); continue; }
                 Private::Link link; link.deadline = QDateTime::currentDateTimeUtc().addSecs(5);
-                d->links.insert(s, link); d->attach(s);
+                d->links.insert(s, link); d->attach(s); d->schedule();
             }
         });
     }
-    d->running = true; d->timer.start(); d->openRelay(); return true;
+    d->running = true; d->openRelay(); return true;
 }
 void Peer::stop() {
+    const QPointer<Peer> alive(this);
     d->running = false; d->retry.stop(); d->authTimer.stop(); d->timer.stop();
     d->server.reset(); d->resetLocal();
     d->ready = false; d->relay.abort();
-    for (const auto &id : d->requests.keys()) d->finish(id, protocol::error("stopped"));
+    if (!alive) return;
+    for (const auto &id : d->requests.keys()) { d->finish(id, protocol::error("stopped")); if (!alive) return; }
     d->directory = {}; d->account.clear(); d->options.credential.clear(); d->handler = {};
-    emit stateChanged(); emit peersChanged();
+    emit stateChanged(); if (alive) emit peersChanged();
 }
 bool Peer::isReady() const { return d->ready; }
 QJsonArray Peer::peers() const { return d->directory; }
@@ -284,6 +315,7 @@ QString Peer::request(const QString &peer, const QJsonObject &payload) {
         QTimer::singleShot(0, this, [this, id] { emit completed(id, protocol::error("request_too_large_or_busy"), {}); }); return id;
     }
     d->requests.insert(id, {peer, payload, {}, {}, QDateTime::currentDateTimeUtc().addMSecs(d->options.requestTimeoutMs)});
+    d->schedule();
     QTimer::singleShot(0, this, [this, id] { d->startRequest(id); }); return id;
 }
 QString Peer::createPairingOffer() {

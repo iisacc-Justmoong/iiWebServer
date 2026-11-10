@@ -1,4 +1,5 @@
 #include "NetworkFixture.h"
+#include "TestPaths.h"
 #include <QJsonDocument>
 #include <iiFileProviderPresentation.h>
 #include <iiWebServer.h>
@@ -7,6 +8,7 @@
 #include <QPointer>
 #include <QSignalSpy>
 #include <QTemporaryDir>
+#include <QTimer>
 #include <QTest>
 
 using namespace iiWebServer;
@@ -44,6 +46,40 @@ QJsonObject reply(Peer &client, const QString &target, const QJsonObject &payloa
 class HostingTests : public QObject {
     Q_OBJECT
 private slots:
+    void peerIdleDeadlineRetiresAfterRequest() {
+        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        Peer peer; auto config = options(relay.port(), "idle-peer"); config.localEnabled = false;
+        QVERIFY(peer.start(config)); QTRY_VERIFY(peer.isReady());
+        auto *timer = peer.findChild<QTimer *>(QStringLiteral("Peer.deadline"), Qt::FindDirectChildrenOnly);
+        QVERIFY(timer); QVERIFY(timer->isSingleShot()); QVERIFY(!timer->isActive());
+        QSignalSpy completed(&peer, &Peer::completed);
+        const auto request = peer.request("missing-host", {}); QVERIFY(!request.isEmpty()); QVERIFY(timer->isActive());
+        QTRY_COMPARE(completed.size(), 1); QVERIFY(!timer->isActive());
+    }
+    void peerMayBeDestroyedByCompletion() {
+        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        auto *peer = new Peer; QPointer<Peer> alive(peer);
+        auto config = options(relay.port(), "retiring-peer"); config.localEnabled = false;
+        QVERIFY(peer->start(config)); QTRY_VERIFY(peer->isReady());
+        connect(peer, &Peer::completed, this, [peer] { delete peer; });
+        QVERIFY(!peer->request("missing-host", {}).isEmpty());
+        QTRY_VERIFY(alive.isNull());
+    }
+    void relayTracksOnlyLiveDeadlinesAndHeartbeats() {
+        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        auto *deadline = relay.findChild<QTimer *>(QStringLiteral("RelayServer.deadline"), Qt::FindDirectChildrenOnly);
+        auto *heartbeat = relay.findChild<QTimer *>(QStringLiteral("RelayServer.heartbeat"), Qt::FindDirectChildrenOnly);
+        QVERIFY(deadline); QVERIFY(deadline->isSingleShot()); QVERIFY(!deadline->isActive());
+        QVERIFY(heartbeat); QVERIFY(!heartbeat->isActive());
+        Peer peer; auto config = options(relay.port(), "heartbeat-peer"); config.localEnabled = false;
+        QVERIFY(peer.start(config)); QTRY_VERIFY(peer.isReady());
+        QVERIFY(deadline->isActive()); QVERIFY(heartbeat->isActive());
+        peer.stop(); QTRY_VERIFY(!deadline->isActive() && !heartbeat->isActive());
+        Peer another; config.peerId = "stopping-peer";
+        QVERIFY(another.start(config)); QTRY_VERIFY(another.isReady());
+        QVERIFY(heartbeat->isActive()); relay.stop();
+        QVERIFY(!deadline->isActive() && !heartbeat->isActive());
+    }
     void reopeningCanDestroyTheSocketFromDisconnect() {
         WebSocketServer server; QVERIFY(server.listen(Address::loopback(), 0, {}));
         auto *socket = new WebSocket; QPointer<WebSocket> alive(socket);
@@ -70,7 +106,7 @@ private slots:
         QCOMPARE(connected.size(), 0); QCOMPARE(accepted.size(), 0);
     }
     void privatePresentationsDoNotConsumePublicPagination() {
-        QTemporaryDir root(TEST_DIRECTORY "/presentation-share-XXXXXX"); QVERIFY(root.isValid());
+        QTemporaryDir root(testDirectory() + "/presentation-share-XXXXXX"); QVERIFY(root.isValid());
         for (int i = 0; i < 270; ++i) {
             QFile document(root.filePath(QString(".asset-%1.iisacc-preview").arg(i)));
             QVERIFY(document.open(QIODevice::WriteOnly)); document.write("private derived fixture");
@@ -169,7 +205,7 @@ private slots:
         QVERIFY(attack.state() == ii::network::SocketState::closed || attack.state() == ii::network::SocketState::failed);
     }
     void filesAreBoundedAndConfined() {
-        QTemporaryDir root(TEST_DIRECTORY "/share-XXXXXX"), outside(TEST_DIRECTORY "/outside-XXXXXX");
+        QTemporaryDir root(testDirectory() + "/share-XXXXXX"), outside(testDirectory() + "/outside-XXXXXX");
         QVERIFY(root.isValid() && outside.isValid());
         FileShare share(root.path());
         const QByteArray data(700000, 'x');
@@ -255,14 +291,14 @@ private slots:
     }
     void tlsLocalPinAndRelayTrust() {
         TlsConfiguration tls;
-        tls.policy.identity.certificate_chain_file = TEST_DIRECTORY "/test-cert.pem";
-        tls.policy.identity.private_key_file = TEST_DIRECTORY "/test-key.pem";
+        tls.policy.identity.certificate_chain_file = (testDirectory() + "/test-cert.pem").toStdString();
+        tls.policy.identity.private_key_file = (testDirectory() + "/test-key.pem").toStdString();
         RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback(), 0, tls));
         auto o = options(relay.port(), "host"); o.relayUrl.setScheme("wss");
         Peer untrusted;
         QVERIFY(untrusted.start(o));
         QTRY_VERIFY(!untrusted.errorString().isEmpty()); QVERIFY(!untrusted.isReady()); untrusted.stop();
-        o.relayTls.policy.ca_file = TEST_DIRECTORY "/test-ca.pem"; o.localTls = tls;
+        o.relayTls.policy.ca_file = (testDirectory() + "/test-ca.pem").toStdString(); o.localTls = tls;
         Peer host, client;
         QVERIFY(host.start(o, [](const auto &, const auto &) { return QJsonObject{{"ok", true}, {"tls", true}}; }));
         o.peerId = "client"; o.hostFiles = false;

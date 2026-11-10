@@ -7,9 +7,13 @@ import zipfile
 
 COMMIT = '582635541d2ec0c84eac5f66cbebd41e2d35c7ae'
 SHA256 = 'a75a1cf74d6b1f40203f3011b6c7c2d1a554baf70e909de3765b00ea2ae249f8'
+repository = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(repository/'tools'))
+from resource_paths import resource_subdir
+resource_root = resource_subdir(repository, 'dependencies', 'smb-fixture')
 directory = Path(sys.argv[1]).resolve()
-if not directory.is_relative_to(Path(__file__).resolve().parents[2]/'build'):
-    raise RuntimeError('The SMB fixture source must remain inside this project build/ directory')
+if directory != resource_root.resolve():
+    raise RuntimeError('The SMB fixture source must use the project resource directory')
 directory.mkdir(parents=True, exist_ok=True)
 archive = directory/'source.zip'
 if not archive.exists():

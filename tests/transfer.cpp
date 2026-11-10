@@ -1,3 +1,4 @@
+#include "TestPaths.h"
 #include "NetworkFixture.h"
 #include "Transfer.h"
 #include <QtCore/QCryptographicHash>
@@ -35,7 +36,7 @@ static TransferResult waitResult(FileTransfer &transfer, const TransferRequest &
 
 void TransferTests::binaryRoundTripAndIntegrity() {
     if (FileTransfer::backendVersion().isEmpty()) QSKIP("libcurl disabled");
-    QTemporaryDir dir(QString(TEST_DIRECTORY) + "/transfer-XXXXXX");
+    QTemporaryDir dir(testDirectory() + "/transfer-XXXXXX");
     QVERIFY(dir.isValid());
     QByteArray bytes(3 * 1024 * 1024 + 123, '\0');
     for (qsizetype i = 0; i < bytes.size(); ++i) bytes[i] = char(i % 256);
@@ -69,7 +70,7 @@ void TransferTests::binaryRoundTripAndIntegrity() {
 
 void TransferTests::failedDownloadPreservesDestination() {
     if (FileTransfer::backendVersion().isEmpty()) QSKIP("libcurl disabled");
-    QTemporaryDir dir(QString(TEST_DIRECTORY) + "/transfer-XXXXXX");
+    QTemporaryDir dir(testDirectory() + "/transfer-XXXXXX");
     QVERIFY(writeFile(dir.filePath("source"), QByteArray(400000, 'x')));
     const auto destination = dir.filePath("destination");
     QVERIFY(writeFile(destination, "keep"));
@@ -136,7 +137,7 @@ void TransferTests::httpErrorsRedirectsAndCancellation() {
             socket->disconnectFromHost();
         });
     });
-    QTemporaryDir dir(QString(TEST_DIRECTORY) + "/transfer-XXXXXX");
+    QTemporaryDir dir(testDirectory() + "/transfer-XXXXXX");
     FileTransfer transfer;
     TransferRequest r;
     r.url = QUrl(QString("http://127.0.0.1:%1/missing").arg(server.serverPort()));

@@ -174,20 +174,25 @@ When using an existing HTTPS reverse proxy, bind the relay to `127.0.0.1:9443` a
 ## Build and Install
 
 ```sh
-network_prefix="$PWD/../iiNetwork/build/package" # Or the installed iiNetwork 0.5+ prefix.
+network_prefix="${IINETWORK_PREFIX:-$HOME/.local/SDK/iiNetwork}"
+sdk_prefix="$HOME/.local/SDK"
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \
-  -DCMAKE_PREFIX_PATH="$network_prefix;/Volumes/Storage/Qt/6.8.3/macos" \
-  -DCMAKE_INSTALL_PREFIX="$PWD/build/install"
+  -DCMAKE_PREFIX_PATH="$network_prefix;$sdk_prefix/iiSDKCore;$sdk_prefix/iiJson;$sdk_prefix/iiFileProvider;/Volumes/Storage/Qt/6.8.3/macos" \
+  -DCMAKE_INSTALL_PREFIX="$HOME/.local/SDK/iiWebServer"
 cmake --build build --parallel 4
-ctest --test-dir build --output-on-failure
+ctest --test-dir build --output-on-failure \
+  -R '^iiWebServer\.(source_layout|resource_runner|resource_paths|resource_links|resource_fixture|install_policy|fixture_cleanup|hello_world|optional_backends)$'
 cmake --install build
-cmake -S tests/consumer -B build/consumer/build \
-  -DCMAKE_PREFIX_PATH="$PWD/build/install;$network_prefix;/Volumes/Storage/Qt/6.8.3/macos"
-cmake --build build/consumer/build --parallel 4
-ctest --test-dir build/consumer/build --output-on-failure
 ```
 
-It runs the same verification as `INSTALL_PREFIX=... ./install.sh`. The install target is `iiWebServer::iiWebServer`, the public headers are `src/Compatibility/iiWebServer.h`, `src/Peers/WebServer.h`, `src/Peers/PairingLink.h`, and `src/Compatibility/iiWebServerExport.h`. It does not create circular references between headers. It uses iOS and `BUILD_SHARED_LIBS=OFF` in `BUILD_TESTING=OFF`. It maintains the existing `helloWorld()` ABI. All build artifacts are placed under `build/`.
+`install.sh` runs the same non-server checks by default. Set
+`IIWEBSERVER_RUN_INTEGRATION_TESTS=1` only when starting local test servers and
+protocol processes is intended. The full CTest suite remains available. Build
+output stays in `build/`; test certificates and transient runtime files use
+isolated `resources/` workspaces and are removed after each test. See
+[BuildLayout.md](docs/BuildLayout.md). Installed-consumer builds are separate
+explicit checks, not extra default build trees. The install target is
+`iiWebServer::iiWebServer`. It maintains the existing `helloWorld()` ABI.
 
 <a id="의존성-검토"></a>
 

@@ -14,15 +14,22 @@
       "document_id": "urn:iisacc:document:130de6bbb4986a8a9f107e57d720842cd3ca3a75daa4b55db0a415d409d2834b",
       "source": "AGENT.md",
       "agent_json": "docs/entrypoints/AGENT.agent.json",
-      "source_sha256": "8c8498fb23c7ed1ff6186e16a1c92f62212b53e5144c9ef11decdc909760704b",
+      "source_sha256": "c1f855f35b84e528b77ebd75b411069c26530469890f2b8d3ef294509d50dbba",
       "role": "instructions"
     },
     {
       "document_id": "urn:iisacc:document:8a59e762d6237a45cac2abe8e98a7d6393b806a5148b8e481a070f07f96fe465",
       "source": "README.md",
       "agent_json": "docs/entrypoints/README.agent.json",
-      "source_sha256": "e604ec3f1618f77f61ee6b4501568d13881f3f0ffe40268fc3a5c648b2f11a9f",
+      "source_sha256": "15c1463276ff40516c807b0408320ebc91b5b577ec5cfa85bbc9f15918ae6437",
       "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:a595c981840026d4ce7aaa724ceeb05d5a5ad3d62ec234aad2459c28aad91261",
+      "source": "docs/BuildLayout.md",
+      "agent_json": "docs/BuildLayout.agent.json",
+      "source_sha256": "57bcdec4a28f01ce57997dd2af37585c74b547c8b0b5ca92a83ef4727ac8d57e",
+      "role": "guide"
     },
     {
       "document_id": "urn:iisacc:document:34b646d5a3e477cc1b15788497fb3eb0e6fb13f15267e6f59131c78c5970e6a8",
@@ -35,7 +42,7 @@
       "document_id": "urn:iisacc:document:3b06a883dd5d3d1757377d997c5ffe9d88c737cb1de87e542301e70bf74a0682",
       "source": "docs/FileTransfer.md",
       "agent_json": "docs/FileTransfer.agent.json",
-      "source_sha256": "07e4e6ad20bc7086ed3e9d075187c29f612040e208ce0053a34a910596e84014",
+      "source_sha256": "80d04706fdf7f27d887a771de60f5716963cc7efe3f4621c3c9a8a260dc07361",
       "role": "guide"
     },
     {
@@ -49,14 +56,14 @@
       "document_id": "urn:iisacc:document:39a7ef37b6274f1cba0526bba7dade51018e52792bf15a3d0cdaa7481cdf7560",
       "source": "docs/Network.md",
       "agent_json": "docs/Network.agent.json",
-      "source_sha256": "1659659a88dd36cf20f7141b31935c677a31ded095b8b52569992870b1ffed0a",
+      "source_sha256": "7e2cb2eff96767c97d0929254f8a1b975e7f5ab4fb731d44c9800f039af2b955",
       "role": "guide"
     },
     {
       "document_id": "urn:iisacc:document:27a5256e7924def7a2461d30e8fe12c57cc4c81be101f7488059b635ddf40346",
       "source": "docs/README.md",
       "agent_json": "docs/README.agent.json",
-      "source_sha256": "1a625a479022120e6d78ca77a0a38fc111a847d6b165a35bf4ab8e85bcebeaa9",
+      "source_sha256": "5482b66cd3a4a828ae9ef8c3788101a1cdbfaf6da42f602275f4223f22c5e516",
       "role": "overview"
     },
     {

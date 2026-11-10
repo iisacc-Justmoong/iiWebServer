@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "README.md",
-    "sha256": "e604ec3f1618f77f61ee6b4501568d13881f3f0ffe40268fc3a5c648b2f11a9f",
-    "bytes": 21957,
-    "line_count": 227,
+    "sha256": "15c1463276ff40516c807b0408320ebc91b5b577ec5cfa85bbc9f15918ae6437",
+    "bytes": 22057,
+    "line_count": 232,
     "encoding": "utf-8",
     "language": "ko"
   },
@@ -948,52 +948,52 @@
       "id": "b000117",
       "kind": "fenced_code",
       "start_line": 176,
-      "end_line": 188,
-      "raw": "```sh\nnetwork_prefix=\"$PWD/../iiNetwork/build/package\" # Or the installed iiNetwork 0.5+ prefix.\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure\ncmake --install build\ncmake -S tests/consumer -B build/consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/install;$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --parallel 4\nctest --test-dir build/consumer/build --output-on-failure\n```\n",
+      "end_line": 186,
+      "raw": "```sh\nnetwork_prefix=\"${IINETWORK_PREFIX:-$HOME/.local/SDK/iiNetwork}\"\nsdk_prefix=\"$HOME/.local/SDK\"\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;$sdk_prefix/iiSDKCore;$sdk_prefix/iiJson;$sdk_prefix/iiFileProvider;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$HOME/.local/SDK/iiWebServer\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure \\\n  -R '^iiWebServer\\.(source_layout|resource_runner|resource_paths|resource_links|resource_fixture|install_policy|fixture_cleanup|hello_world|optional_backends)$'\ncmake --install build\n```\n",
       "language": "sh",
-      "code": "network_prefix=\"$PWD/../iiNetwork/build/package\" # Or the installed iiNetwork 0.5+ prefix.\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure\ncmake --install build\ncmake -S tests/consumer -B build/consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/install;$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --parallel 4\nctest --test-dir build/consumer/build --output-on-failure\n",
+      "code": "network_prefix=\"${IINETWORK_PREFIX:-$HOME/.local/SDK/iiNetwork}\"\nsdk_prefix=\"$HOME/.local/SDK\"\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;$sdk_prefix/iiSDKCore;$sdk_prefix/iiJson;$sdk_prefix/iiFileProvider;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$HOME/.local/SDK/iiWebServer\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure \\\n  -R '^iiWebServer\\.(source_layout|resource_runner|resource_paths|resource_links|resource_fixture|install_policy|fixture_cleanup|hello_world|optional_backends)$'\ncmake --install build\n",
       "closed": true
     },
     {
       "id": "b000118",
       "kind": "blank",
-      "start_line": 189,
-      "end_line": 189,
+      "start_line": 187,
+      "end_line": 187,
       "raw": "\n"
     },
     {
       "id": "b000119",
       "kind": "paragraph",
-      "start_line": 190,
-      "end_line": 190,
-      "raw": "It runs the same verification as `INSTALL_PREFIX=... ./install.sh`. The install target is `iiWebServer::iiWebServer`, the public headers are `src/Compatibility/iiWebServer.h`, `src/Peers/WebServer.h`, `src/Peers/PairingLink.h`, and `src/Compatibility/iiWebServerExport.h`. It does not create circular references between headers. It uses iOS and `BUILD_SHARED_LIBS=OFF` in `BUILD_TESTING=OFF`. It maintains the existing `helloWorld()` ABI. All build artifacts are placed under `build/`.\n"
+      "start_line": 188,
+      "end_line": 195,
+      "raw": "`install.sh` runs the same non-server checks by default. Set\n`IIWEBSERVER_RUN_INTEGRATION_TESTS=1` only when starting local test servers and\nprotocol processes is intended. The full CTest suite remains available. Build\noutput stays in `build/`; test certificates and transient runtime files use\nisolated `resources/` workspaces and are removed after each test. See\n[BuildLayout.md](docs/BuildLayout.md). Installed-consumer builds are separate\nexplicit checks, not extra default build trees. The install target is\n`iiWebServer::iiWebServer`. It maintains the existing `helloWorld()` ABI.\n"
     },
     {
       "id": "b000120",
       "kind": "blank",
-      "start_line": 191,
-      "end_line": 191,
+      "start_line": 196,
+      "end_line": 196,
       "raw": "\n"
     },
     {
       "id": "b000121",
       "kind": "html",
-      "start_line": 192,
-      "end_line": 192,
+      "start_line": 197,
+      "end_line": 197,
       "raw": "<a id=\"의존성-검토\"></a>\n"
     },
     {
       "id": "b000122",
       "kind": "blank",
-      "start_line": 193,
-      "end_line": 193,
+      "start_line": 198,
+      "end_line": 198,
       "raw": "\n"
     },
     {
       "id": "b000123",
       "kind": "heading",
-      "start_line": 194,
-      "end_line": 194,
+      "start_line": 199,
+      "end_line": 199,
       "raw": "## Dependency Review\n",
       "level": 2,
       "title": "Dependency Review"
@@ -1001,57 +1001,57 @@
     {
       "id": "b000124",
       "kind": "blank",
-      "start_line": 195,
-      "end_line": 195,
+      "start_line": 200,
+      "end_line": 200,
       "raw": "\n"
     },
     {
       "id": "b000125",
       "kind": "paragraph",
-      "start_line": 196,
-      "end_line": 196,
+      "start_line": 201,
+      "end_line": 201,
       "raw": "The SDK requires C++23, iiNetwork 0.5+, iiSDKCore, iiJson, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.\n"
     },
     {
       "id": "b000126",
       "kind": "blank",
-      "start_line": 197,
-      "end_line": 197,
+      "start_line": 202,
+      "end_line": 202,
       "raw": "\n"
     },
     {
       "id": "b000127",
       "kind": "paragraph",
-      "start_line": 198,
-      "end_line": 198,
+      "start_line": 203,
+      "end_line": 203,
       "raw": "`Address` is `ii::network::IpAddress`; use `Address::parse()`, `Address::loopback()` or `Address::any()`. `TlsConfiguration` is `ii::network::TlsOptions`; configure `policy.identity` and `policy.ca_file` directly. LAN pins use iiNetwork's explicit `trusted_certificate_sha256` policy, with certificate validity and purpose checks retained. See [network implementation and consumer migration](docs/Network.md).\n"
     },
     {
       "id": "b000128",
       "kind": "blank",
-      "start_line": 199,
-      "end_line": 199,
+      "start_line": 204,
+      "end_line": 204,
       "raw": "\n"
     },
     {
       "id": "b000129",
       "kind": "html",
-      "start_line": 200,
-      "end_line": 200,
+      "start_line": 205,
+      "end_line": 205,
       "raw": "<a id=\"라이선스\"></a>\n"
     },
     {
       "id": "b000130",
       "kind": "blank",
-      "start_line": 201,
-      "end_line": 201,
+      "start_line": 206,
+      "end_line": 206,
       "raw": "\n"
     },
     {
       "id": "b000131",
       "kind": "heading",
-      "start_line": 202,
-      "end_line": 202,
+      "start_line": 207,
+      "end_line": 207,
       "raw": "## License\n",
       "level": 2,
       "title": "License"
@@ -1059,43 +1059,43 @@
     {
       "id": "b000132",
       "kind": "blank",
-      "start_line": 203,
-      "end_line": 203,
+      "start_line": 208,
+      "end_line": 208,
       "raw": "\n"
     },
     {
       "id": "b000133",
       "kind": "paragraph",
-      "start_line": 204,
-      "end_line": 204,
+      "start_line": 209,
+      "end_line": 209,
       "raw": "SPDX-License-Identifier: MIT. Its own code follows [LICENSE](LICENSE). It does not replace the separate licenses of external libraries such as Qt.\n"
     },
     {
       "id": "b000134",
       "kind": "blank",
-      "start_line": 205,
-      "end_line": 205,
+      "start_line": 210,
+      "end_line": 210,
       "raw": "\n"
     },
     {
       "id": "b000135",
       "kind": "paragraph",
-      "start_line": 206,
-      "end_line": 206,
+      "start_line": 211,
+      "end_line": 211,
       "raw": "`ii-web-server` is a diagnostic executable that uses the same SDK even without a consumer app. It hosts `--root`, `--relay`, `--id`, and `--credential-file`, reads a chunk via `--peer ID --path relative/path --read`, or reads the list without `--read`. It passes LAN and `--certificate` together to the public `--key` listener. It can force a remote path via `--no-local`. The credential file is set to be readable only by the owner and is not included in version control. `iiWebServer.process_hosting` verifies the actual file bytes from both paths via the HTTP authentication verification server and separate relay, host, and client processes.\n"
     },
     {
       "id": "b000136",
       "kind": "blank",
-      "start_line": 207,
-      "end_line": 207,
+      "start_line": 212,
+      "end_line": 212,
       "raw": "\n"
     },
     {
       "id": "b000137",
       "kind": "heading",
-      "start_line": 208,
-      "end_line": 208,
+      "start_line": 213,
+      "end_line": 213,
       "raw": "## Source layout\n",
       "level": 2,
       "title": "Source layout"
@@ -1103,43 +1103,43 @@
     {
       "id": "b000138",
       "kind": "blank",
-      "start_line": 209,
-      "end_line": 209,
+      "start_line": 214,
+      "end_line": 214,
       "raw": "\n"
     },
     {
       "id": "b000139",
       "kind": "paragraph",
-      "start_line": 210,
-      "end_line": 210,
+      "start_line": 215,
+      "end_line": 215,
       "raw": "Implementation files and their headers live together under `src/`. Existing feature and platform subdirectories retain their responsibilities. Build configuration, tests, documentation, resources, and maintenance scripts remain at the project root. Configure and build using the repository-local `build/` directory.\n"
     },
     {
       "id": "b000140",
       "kind": "blank",
-      "start_line": 211,
-      "end_line": 211,
+      "start_line": 216,
+      "end_line": 216,
       "raw": "\n"
     },
     {
       "id": "b000141",
       "kind": "html",
-      "start_line": 212,
-      "end_line": 212,
+      "start_line": 217,
+      "end_line": 217,
       "raw": "<a id=\"계정-graphql-인증\"></a>\n"
     },
     {
       "id": "b000142",
       "kind": "blank",
-      "start_line": 213,
-      "end_line": 213,
+      "start_line": 218,
+      "end_line": 218,
       "raw": "\n"
     },
     {
       "id": "b000143",
       "kind": "heading",
-      "start_line": 214,
-      "end_line": 214,
+      "start_line": 219,
+      "end_line": 219,
       "raw": "## Account GraphQL Authentication\n",
       "level": 2,
       "title": "Account GraphQL Authentication"
@@ -1147,50 +1147,50 @@
     {
       "id": "b000144",
       "kind": "blank",
-      "start_line": 215,
-      "end_line": 215,
+      "start_line": 220,
+      "end_line": 220,
       "raw": "\n"
     },
     {
       "id": "b000145",
       "kind": "paragraph",
-      "start_line": 216,
-      "end_line": 216,
+      "start_line": 221,
+      "end_line": 221,
       "raw": "`SessionAuthenticator` and `--session-url` receive the GraphQL endpoint. The default is `https://iisacc.com/Account/GraphQL`. The `POST` body is `{\"query\":\"query AccountSession { accountSession { account { sub } } }\"}` and only reads `data.accountSession.account.sub` as the authentication subject. It does not authenticate partial responses with errors, null accounts, incorrect Content-Type, or redirects. It updates the relay and server endpoint together.\n"
     },
     {
       "id": "b000146",
       "kind": "blank",
-      "start_line": 217,
-      "end_line": 217,
+      "start_line": 222,
+      "end_line": 222,
       "raw": "\n"
     },
     {
       "id": "b000147",
       "kind": "paragraph",
-      "start_line": 218,
-      "end_line": 218,
+      "start_line": 223,
+      "end_line": 223,
       "raw": "LAN applications can require mutual account proofs with `setPairingAuthentication`. Proofs bind both peer IDs, pinned certificate, one-use offer and client nonce with separate client/host roles. Authentication precedes Files access. Legacy clients fail closed when callbacks are installed.\n"
     },
     {
       "id": "b000148",
       "kind": "blank",
-      "start_line": 219,
-      "end_line": 219,
+      "start_line": 224,
+      "end_line": 224,
       "raw": "\n"
     },
     {
       "id": "b000149",
       "kind": "html",
-      "start_line": 220,
-      "end_line": 220,
+      "start_line": 225,
+      "end_line": 225,
       "raw": "<!-- workspace-docs:readme:start -->\n"
     },
     {
       "id": "b000150",
       "kind": "heading",
-      "start_line": 221,
-      "end_line": 221,
+      "start_line": 226,
+      "end_line": 226,
       "raw": "## Documentation entry points\n",
       "level": 2,
       "title": "Documentation entry points"
@@ -1198,15 +1198,15 @@
     {
       "id": "b000151",
       "kind": "blank",
-      "start_line": 222,
-      "end_line": 222,
+      "start_line": 227,
+      "end_line": 227,
       "raw": "\n"
     },
     {
       "id": "b000152",
       "kind": "list",
-      "start_line": 223,
-      "end_line": 226,
+      "start_line": 228,
+      "end_line": 231,
       "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
       "items": [
         {
@@ -1234,8 +1234,8 @@
     {
       "id": "b000153",
       "kind": "html",
-      "start_line": 227,
-      "end_line": 227,
+      "start_line": 232,
+      "end_line": 232,
       "raw": "<!-- workspace-docs:readme:end -->\n"
     }
   ],
@@ -1342,7 +1342,7 @@
       "level": 2,
       "title": "Dependency Review",
       "anchor": "dependency-review",
-      "start_line": 194
+      "start_line": 199
     },
     {
       "block_id": "b000131",
@@ -1350,7 +1350,7 @@
       "level": 2,
       "title": "License",
       "anchor": "license",
-      "start_line": 202
+      "start_line": 207
     },
     {
       "block_id": "b000137",
@@ -1358,7 +1358,7 @@
       "level": 2,
       "title": "Source layout",
       "anchor": "source-layout",
-      "start_line": 208
+      "start_line": 213
     },
     {
       "block_id": "b000143",
@@ -1366,7 +1366,7 @@
       "level": 2,
       "title": "Account GraphQL Authentication",
       "anchor": "account-graphql-authentication",
-      "start_line": 214
+      "start_line": 219
     },
     {
       "block_id": "b000150",
@@ -1374,7 +1374,7 @@
       "level": 2,
       "title": "Documentation entry points",
       "anchor": "documentation-entry-points",
-      "start_line": 221
+      "start_line": 226
     }
   ],
   "indexes": {
@@ -1444,7 +1444,7 @@
       },
       {
         "block_id": "b000125",
-        "line": 196,
+        "line": 201,
         "text": "The SDK requires C++23, iiNetwork 0.5+, iiSDKCore, iiJson, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.",
         "basis": "lexical_match",
         "context": "paragraph"
@@ -1459,7 +1459,7 @@
       {
         "block_id": "b000117",
         "language": "sh",
-        "code": "network_prefix=\"$PWD/../iiNetwork/build/package\" # Or the installed iiNetwork 0.5+ prefix.\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure\ncmake --install build\ncmake -S tests/consumer -B build/consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/install;$network_prefix;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --parallel 4\nctest --test-dir build/consumer/build --output-on-failure\n"
+        "code": "network_prefix=\"${IINETWORK_PREFIX:-$HOME/.local/SDK/iiNetwork}\"\nsdk_prefix=\"$HOME/.local/SDK\"\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"$network_prefix;$sdk_prefix/iiSDKCore;$sdk_prefix/iiJson;$sdk_prefix/iiFileProvider;/Volumes/Storage/Qt/6.8.3/macos\" \\\n  -DCMAKE_INSTALL_PREFIX=\"$HOME/.local/SDK/iiWebServer\"\ncmake --build build --parallel 4\nctest --test-dir build --output-on-failure \\\n  -R '^iiWebServer\\.(source_layout|resource_runner|resource_paths|resource_links|resource_fixture|install_policy|fixture_cleanup|hello_world|optional_backends)$'\ncmake --install build\n"
       }
     ],
     "links": [
@@ -1506,39 +1506,46 @@
         "line": 52
       },
       {
+        "block_id": "b000119",
+        "label": "BuildLayout.md",
+        "target": "docs/BuildLayout.md",
+        "kind": "relative",
+        "line": 193
+      },
+      {
         "block_id": "b000127",
         "label": "network implementation and consumer migration",
         "target": "docs/Network.md",
         "kind": "relative",
-        "line": 198
+        "line": 203
       },
       {
         "block_id": "b000133",
         "label": "LICENSE",
         "target": "LICENSE",
         "kind": "relative",
-        "line": 204
+        "line": 209
       },
       {
         "block_id": "b000152",
         "label": "AGENT.md",
         "target": "AGENT.md",
         "kind": "relative",
-        "line": 224
+        "line": 229
       },
       {
         "block_id": "b000152",
         "label": "documentation index",
         "target": "docs/README.md",
         "kind": "relative",
-        "line": 225
+        "line": 230
       },
       {
         "block_id": "b000152",
         "label": "agent index",
         "target": "docs/agent-index.json",
         "kind": "relative",
-        "line": 226
+        "line": 231
       }
     ],
     "tables": [

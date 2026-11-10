@@ -10,6 +10,7 @@
 #include <QTimeZone>
 #include <QUrlQuery>
 #include <algorithm>
+#include <limits>
 
 namespace iiWebServer {
 using namespace protocol;
@@ -107,13 +108,36 @@ public:
     int addressIndex = 0;
     bool clientPaired = false, helloSent = false, stopping = false;
     explicit Private(LanPeer *owner) : q(owner) {
-        timer.setInterval(250); QObject::connect(&timer, &QTimer::timeout, q, [this] { sweep(); });
+        timer.setParent(q); timer.setObjectName(QStringLiteral("LanPeer.deadline"));
+        timer.setSingleShot(true); timer.setTimerType(Qt::PreciseTimer);
+        QObject::connect(&timer, &QTimer::timeout, q, [this] {
+            const QPointer<LanPeer> alive(q); sweep(); if (alive) schedule();
+        });
+        QObject::connect(q, &LanPeer::changed, q, [this] { schedule(); });
+        QObject::connect(q, &LanPeer::completed, q, [this] { schedule(); });
+    }
+    void schedule() {
+        const auto now = QDateTime::currentDateTimeUtc(); QDateTime next;
+        const auto include = [&](const QDateTime &value) {
+            if (value.isValid() && (!next.isValid() || value < next)) next = value;
+        };
+        if (!qr.isEmpty()) {
+            include(offer.expiresAt);
+            const auto remaining = now.msecsTo(offer.expiresAt);
+            if (remaining > 0) include(now.addMSecs((remaining - 1) % 1000 + 1));
+        }
+        for (const auto &session : std::as_const(clients)) if (!session.paired) include(session.deadline);
+        if (client && !clientPaired) { include(deadline); if (!helloSent) include(connectDeadline); }
+        for (const auto &value : std::as_const(requests)) include(value);
+        if (!next.isValid()) { timer.stop(); return; }
+        const auto delay = std::clamp<qint64>(now.msecsTo(next), 0, (std::numeric_limits<int>::max)());
+        timer.start(int(delay));
     }
     void fail(QString message) {
         error = std::move(message); phase = "error"; qr.clear(); joining.code.clear(); clientPaired = false;
         if (client) { auto *socket = client.data(); client = nullptr; socket->disconnect(q); socket->abort(); socket->deleteLater(); }
-        const auto pending = requests.keys(); requests.clear();
-        for (const auto &id : pending) emit q->completed(id, protocol::error("connection_lost"), "local");
+        const auto pending = requests.keys(); requests.clear(); const QPointer<LanPeer> alive(q);
+        for (const auto &id : pending) { emit q->completed(id, protocol::error("connection_lost"), "local"); if (!alive) return; }
         emit q->changed();
     }
     bool pinned(WebSocket *socket) const {
@@ -148,7 +172,7 @@ public:
         });
         QObject::connect(socket, &WebSocket::disconnected, q, [this] { if (!stopping) fail("The desktop disconnected. Scan a new QR code to reconnect."); });
         QUrl url; url.setScheme("wss"); url.setHost(joining.addresses[addressIndex++]); url.setPort(joining.port);
-        connectDeadline = QDateTime::currentDateTimeUtc().addSecs(4); socket->open(url);
+        connectDeadline = QDateTime::currentDateTimeUtc().addSecs(4); schedule(); socket->open(url);
     }
     void clientMessage(const QJsonObject &m) {
         const auto type = m.value("type").toString();
@@ -225,15 +249,17 @@ public:
         reject("Pair the device before requesting Files.");
     }
     void sweep() {
-        const auto now = QDateTime::currentDateTimeUtc();
+        const auto now = QDateTime::currentDateTimeUtc(); const QPointer<LanPeer> alive(q);
         if (!qr.isEmpty() && offer.expiresAt <= now) { qr.clear(); offer.code.clear(); phase = "error"; error = "The QR code expired. Show a new code."; emit q->changed(); }
         else if (!qr.isEmpty()) emit q->changed();
-        for (auto *socket : clients.keys()) if (!clients.value(socket).paired && clients.value(socket).deadline <= now) socket->close();
+        if (!alive) return;
+        for (auto *socket : clients.keys()) if (!clients.value(socket).paired && clients.value(socket).deadline <= now) { socket->close(); if (!alive) return; }
         if (client && !clientPaired) {
             if (deadline <= now) fail("Pairing timed out. Check the local network and scan a new QR code.");
             else if (!helloSent && connectDeadline <= now) openAddress();
+            if (!alive) return;
         }
-        for (const auto &id : requests.keys()) if (requests.value(id) <= now) { requests.remove(id); emit q->completed(id, protocol::error("timeout"), "local"); }
+        for (const auto &id : requests.keys()) if (requests.value(id) <= now) { requests.remove(id); emit q->completed(id, protocol::error("timeout"), "local"); if (!alive) return; }
     }
 };
 LanPeer::LanPeer(QObject *parent) : QObject(parent), d(std::make_unique<Private>(this)) {}
@@ -260,6 +286,7 @@ bool LanPeer::startHost(QString hostId, QString name, RequestHandler handler, QS
             auto *socket = d->server->nextPendingConnection(); socket->setParent(this);
             if (d->clients.size() >= 8 || !LanLink::localAddress(socket->peerAddress())) { socket->close(); socket->deleteLater(); continue; }
             d->clients.insert(socket, {{}, {}, false, QDateTime::currentDateTimeUtc().addSecs(5)});
+            d->schedule();
             connect(socket, &WebSocket::textMessageReceived, this, [this, socket](const QString &text) { d->hostMessage(socket, parse(text)); });
             connect(socket, &WebSocket::binaryMessageReceived, this, [this, socket](const QByteArray &frame) {
                 if (!d->clients.value(socket).paired || !socket->property("iish.binary").toBool()) { socket->close(); return; }
@@ -272,7 +299,7 @@ bool LanPeer::startHost(QString hostId, QString name, RequestHandler handler, QS
             });
         }
     });
-    d->phase = "hosting"; d->timer.start(); emit changed(); return true;
+    d->phase = "hosting"; emit changed(); return true;
 #endif
 }
 QString LanPeer::createOffer(int lifetimeSeconds) {
@@ -286,7 +313,7 @@ bool LanPeer::join(const QString &qr, QString peerId, QString name) {
     if (!LanLink::decode(qr, &link) || link.expiresAt <= QDateTime::currentDateTimeUtc() || !identifier(peerId)
         || name.isEmpty() || name.size() > 128) { d->fail("This is not a valid, current local Society QR code."); return false; }
     d->joining = link; d->clientId = std::move(peerId); d->clientName = std::move(name); d->phase = "connecting";
-    d->deadline = QDateTime::currentDateTimeUtc().addSecs(15); d->addressIndex = 0; d->timer.start();
+    d->deadline = QDateTime::currentDateTimeUtc().addSecs(15); d->addressIndex = 0;
     d->openAddress(); emit changed(); return true;
 }
 void LanPeer::cancelPairing() {
@@ -359,6 +386,7 @@ QString LanPeer::request(const QString &host, const QJsonObject &payload) {
         QTimer::singleShot(0, this, [this, id] { emit completed(id, protocol::error("not_connected_or_busy"), "local"); }); return id;
     }
     d->requests.insert(id, QDateTime::currentDateTimeUtc().addSecs(15));
+    d->schedule();
     QTimer::singleShot(0, this, [this, id, payload] {
         if (!d->requests.contains(id)) return;
         if (!send(d->client, {{"type", "request"}, {"id", id}, {"payload", payload}})) d->fail("The local connection closed.");

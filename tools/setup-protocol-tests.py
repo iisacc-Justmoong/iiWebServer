@@ -1,4 +1,4 @@
-"""Prepare verified protocol test dependencies under this repository's build/ only."""
+"""Prepare verified protocol test dependencies in the project resource directory."""
 import hashlib
 import json
 import os
@@ -10,10 +10,12 @@ import sys
 import urllib.request
 import venv
 import zipfile
+sys.dont_write_bytecode = True
+from resource_paths import resource_subdir
 
 VERSION = "1.75.1"
 repository = Path(__file__).resolve().parent.parent
-dependencies = repository / "build" / "protocol-deps"
+dependencies = resource_subdir(repository, "dependencies", "protocol")
 dependencies.mkdir(parents=True, exist_ok=True)
 system = {"Darwin": "osx", "Linux": "linux", "Windows": "windows"}.get(platform.system())
 arch = {"arm64": "arm64", "aarch64": "arm64", "x86_64": "amd64", "AMD64": "amd64"}.get(platform.machine())

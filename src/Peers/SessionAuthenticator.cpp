@@ -1,5 +1,6 @@
 #include "WebServer.h"
 #include "Protocol.h"
+#include "../Transport/RuntimePump.h"
 #include <iiNetwork/Http.h>
 #include <QPointer>
 #include <QTimer>
@@ -8,13 +9,11 @@ namespace iiWebServer {
 class SessionAuthenticator::Private {
 public:
     QUrl url;
-    ii::runtime::EventLoop loop{4096};
-    QTimer timer;
+    std::shared_ptr<detail::RuntimePump> runtime = std::make_shared<detail::RuntimePump>(4096);
     QHash<QString, std::shared_ptr<ii::network::Http>> requests;
 };
 SessionAuthenticator::SessionAuthenticator(QUrl url, QObject *parent) : QObject(parent), d(std::make_unique<Private>()) {
-    d->url = std::move(url); d->timer.setInterval(2); d->timer.setTimerType(Qt::PreciseTimer);
-    connect(&d->timer, &QTimer::timeout, this, [this] { d->loop.poll(); });
+    d->url = std::move(url);
 }
 SessionAuthenticator::~SessionAuthenticator() = default;
 void SessionAuthenticator::authenticate(const QByteArray &cookie, AuthCompletion done) {
@@ -29,7 +28,7 @@ void SessionAuthenticator::authenticate(const QByteArray &cookie, AuthCompletion
     request.timeout = std::chrono::milliseconds(5000); request.maximum_bytes = 65536;
     request.body = R"({"query":"query AccountSession { accountSession { account { sub } } }"})";
     const auto id = protocol::uuid();
-    auto http = std::make_shared<ii::network::Http>(d->loop); d->requests.insert(id, http);
+    auto http = std::make_shared<ii::network::Http>(d->runtime->events()); d->requests.insert(id, http);
     const QPointer<SessionAuthenticator> owner(this);
     auto result = http->request(std::move(request), [owner, id, done](ii::network::HttpResponse response) {
         if (!owner) return;
@@ -44,10 +43,8 @@ void SessionAuthenticator::authenticate(const QByteArray &cookie, AuthCompletion
             if (!protocol::live(principal)) principal = {};
         }
         owner->d->requests.remove(id);
-        if (owner->d->requests.isEmpty()) owner->d->timer.stop();
         done(principal);
     });
     if (!result) { d->requests.remove(id); done({}); return; }
-    d->timer.start();
 }
 }

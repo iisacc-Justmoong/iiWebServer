@@ -1,3 +1,4 @@
+#include "TestPaths.h"
 #include "StorageBridge.h"
 #include <QtCore/QFile>
 #include <QtCore/QJsonArray>
@@ -25,7 +26,7 @@ static StorageResult run(StorageBridge &bridge, const StorageRequest &request) {
 void StorageBridgeTests::actualCatalogueAndFileOperations() {
     const auto executable = qEnvironmentVariable("IIWEBSERVER_TEST_RCLONE");
     if (executable.isEmpty()) QSKIP("Set IIWEBSERVER_TEST_RCLONE for real backend integration tests");
-    QTemporaryDir dir(QString(TEST_DIRECTORY) + "/storage-XXXXXX");
+    QTemporaryDir dir(testDirectory() + "/storage-XXXXXX");
     QVERIFY(dir.isValid());
     StorageBridge bridge({executable, {}, {}, dir.path()});
     auto providers = run(bridge, {StorageOperation::Providers});
@@ -54,7 +55,7 @@ void StorageBridgeTests::actualCatalogueAndFileOperations() {
     QVERIFY(removed.ok); QVERIFY(!file.exists());
 }
 void StorageBridgeTests::rejectUnsafeConfiguration() {
-    QTemporaryDir dir(QString(TEST_DIRECTORY) + "/storage-XXXXXX");
+    QTemporaryDir dir(testDirectory() + "/storage-XXXXXX");
     StorageBridge missing({dir.filePath("missing-rclone"), {}, {}, dir.path()});
     QCOMPARE(run(missing, {StorageOperation::Providers}).error, "backend_unavailable");
     const auto executable = qEnvironmentVariable("IIWEBSERVER_TEST_RCLONE");
@@ -76,7 +77,7 @@ void StorageBridgeTests::rejectUnsafeConfiguration() {
 void StorageBridgeTests::serverRequiresAuthentication() {
     const auto executable = qEnvironmentVariable("IIWEBSERVER_TEST_RCLONE");
     if (executable.isEmpty()) QSKIP("Set IIWEBSERVER_TEST_RCLONE");
-    QTemporaryDir dir(QString(TEST_DIRECTORY) + "/storage-XXXXXX");
+    QTemporaryDir dir(testDirectory() + "/storage-XXXXXX");
     QVERIFY(QDir(dir.path()).mkdir("files"));
     FileProtocolServer server({executable, {}, {}, dir.path()});
     FileServerOptions options;

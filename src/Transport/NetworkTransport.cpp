@@ -1,4 +1,5 @@
 #include "NetworkTransport.h"
+#include "RuntimePump.h"
 #include <iiNetwork/WebSocket.h>
 #include <iiSDKCore/Runtime/Runtime.h>
 #include <QtCore/QDateTime>
@@ -12,17 +13,7 @@ namespace {
 QString hex(const std::array<unsigned char, 32> &value) {
     return QString::fromLatin1(QByteArray(reinterpret_cast<const char *>(value.data()), value.size()).toHex());
 }
-struct Runtime final : QObject, std::enable_shared_from_this<Runtime> {
-    ii::runtime::EventLoop loop{8192};
-    QTimer timer;
-    Runtime() {
-        timer.setTimerType(Qt::PreciseTimer); timer.setInterval(2);
-        QObject::connect(&timer, &QTimer::timeout, this, [this] {
-            const auto keep = shared_from_this(); loop.poll();
-        });
-        timer.start();
-    }
-};
+using Runtime = detail::RuntimePump;
 net::WebSocketLimits wireLimits() {
     net::WebSocketLimits limits;
     limits.message_bytes = 1024 * 1024;
@@ -139,12 +130,12 @@ struct WebSocket::Private : std::enable_shared_from_this<WebSocket::Private> {
             auto context = net::TlsContext::client(p->tls);
             if (!context) { p->finish(QString::fromStdString(context.error().message)); return; }
             net::TlsStreamOptions bounds; bounds.receive_bytes = 2 * 1024 * 1024; bounds.pending_bytes = 5 * 1024 * 1024;
-            auto socket = std::make_unique<net::TlsStream>(p->runtime->loop, *context, bounds);
+            auto socket = std::make_unique<net::TlsStream>(p->runtime->events(), *context, bounds);
             auto result = socket->connect(endpoint, url.host().toStdString());
             p->stream = std::move(socket);
             if (!result) { p->retry(QString::fromStdString(result.error().message)); return; }
         } else {
-            auto socket = std::make_unique<net::Tcp>(p->runtime->loop);
+            auto socket = std::make_unique<net::Tcp>(p->runtime->events());
             net::TcpOptions bounds; bounds.stream.receive_bytes = 2 * 1024 * 1024; bounds.stream.pending_bytes = 5 * 1024 * 1024;
             auto result = socket->connect(endpoint, bounds); p->stream = std::move(socket);
             if (!result) { p->retry(QString::fromStdString(result.error().message)); return; }
@@ -198,7 +189,7 @@ void WebSocket::open(const QUrl &url) {
         if (port < 1 || port > 65535) { p->finish("Invalid WebSocket port"); return; }
         if (auto address = net::IpAddress::parse(url.host().toStdString())) { p->dial({{*address, quint16(port)}}); return; }
         static ii::runtime::Runtime resolver(ii::runtime::RuntimeOptions{2, 128});
-        const auto sender = p->runtime->loop.sender();
+        const auto sender = p->runtime->events().sender();
         auto admission = resolver.post([weak, sender, host = url.host().toStdString(), port] {
             auto endpoints = net::resolve_host(host, quint16(port));
             const auto delivery = sender.post([weak, endpoints = std::move(endpoints)]() mutable {
@@ -293,13 +284,13 @@ bool WebSocketServer::listen(const Address &address, quint16 port, const TlsConf
         auto context = net::TlsContext::server(tls);
         if (!context) { d->error = QString::fromStdString(context.error().message); return false; }
         net::TlsStreamOptions bounds; bounds.receive_bytes = 2 * 1024 * 1024; bounds.pending_bytes = 5 * 1024 * 1024;
-        d->secure = std::make_unique<net::TlsListener>(d->runtime->loop, *context, bounds);
+        d->secure = std::make_unique<net::TlsListener>(d->runtime->events(), *context, bounds);
         d->secure->accepted = [this](auto stream) { d->accept(std::move(stream)); };
         auto result = d->secure->listen({address, port});
         if (!result) { d->error = QString::fromStdString(result.error().message); return false; }
     } else {
         if (!address.is_loopback()) { d->error = "TLS is required for non-loopback listeners"; return false; }
-        d->plain = std::make_unique<net::Listener>(d->runtime->loop);
+        d->plain = std::make_unique<net::Listener>(d->runtime->events());
         d->plain->accepted = [this](auto stream) { d->accept(std::move(stream)); };
         net::ListenerOptions bounds; bounds.accepted_socket.stream.receive_bytes = 2 * 1024 * 1024;
         bounds.accepted_socket.stream.pending_bytes = 5 * 1024 * 1024;

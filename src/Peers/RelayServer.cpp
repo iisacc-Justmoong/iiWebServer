@@ -3,7 +3,11 @@
 #include <QPointer>
 #include <QCryptographicHash>
 #include <QRandomGenerator>
+#include <QScopeGuard>
 #include <QTimer>
+#include <algorithm>
+#include <limits>
+#include <utility>
 
 namespace iiWebServer {
 using namespace protocol;
@@ -13,7 +17,7 @@ public:
         Principal principal;
         QString id, service, name;
         QJsonObject descriptor;
-        bool authenticating = false;
+        bool authenticating = false, closing = false;
         QDateTime connected = QDateTime::currentDateTimeUtc();
         QDateTime pairingWindow;
         int pairingAttempts = 0;
@@ -28,11 +32,42 @@ public:
     QHash<QString, Route> routes;
     QHash<QByteArray, Offer> offers; // Only SHA-256 hashes of QR codes are retained.
     QHash<QString, Pair> pairs;
-    QTimer timer;
+    QTimer timer, heartbeat;
     QString error;
+    bool running = false;
     explicit Private(RelayServer *owner, Authenticator a) : q(owner), auth(std::move(a)) {
-        timer.setInterval(500);
-        QObject::connect(&timer, &QTimer::timeout, q, [this] { sweep(); });
+        timer.setParent(q); timer.setObjectName(QStringLiteral("RelayServer.deadline"));
+        timer.setSingleShot(true); timer.setTimerType(Qt::PreciseTimer);
+        heartbeat.setParent(q); heartbeat.setObjectName(QStringLiteral("RelayServer.heartbeat")); heartbeat.setInterval(500);
+        QObject::connect(&timer, &QTimer::timeout, q, [this] {
+            const QPointer<RelayServer> alive(q); sweep(); if (alive) schedule();
+        });
+        QObject::connect(&heartbeat, &QTimer::timeout, q, [this] {
+            const QPointer<RelayServer> alive(q);
+            for (auto *socket : sessions.keys()) {
+                if (sessions.contains(socket) && !sessions.value(socket).closing) socket->ping();
+                if (!alive) return;
+            }
+        });
+    }
+    void schedule() {
+        if (!running) { timer.stop(); heartbeat.stop(); return; }
+        const auto now = QDateTime::currentDateTimeUtc(); QDateTime next; bool liveSession = false;
+        const auto include = [&](const QDateTime &value) {
+            const auto deadline = value.isValid() ? value : now;
+            if (!next.isValid() || deadline < next) next = deadline;
+        };
+        for (const auto &state : std::as_const(sessions)) {
+            if (state.closing) continue;
+            liveSession = true;
+            include(state.principal.accountId.isEmpty() ? state.connected.addMSecs(7001) : state.principal.expiresAt);
+        }
+        for (const auto &value : std::as_const(routes)) include(value.expires);
+        for (const auto &value : std::as_const(offers)) include(value.expires);
+        for (const auto &value : std::as_const(pairs)) include(value.expires);
+        if (liveSession) { if (!heartbeat.isActive()) heartbeat.start(); } else heartbeat.stop();
+        if (!next.isValid()) { timer.stop(); return; }
+        timer.start(int(std::clamp<qint64>(now.msecsTo(next), 0, (std::numeric_limits<int>::max)())));
     }
     bool active(WebSocket *s) const { return sessions.contains(s) && live(sessions.value(s).principal); }
     void pairing(WebSocket *s, const QString &id, const QString &status, QJsonObject data = {}) {
@@ -40,21 +75,24 @@ public:
     }
     void finishPair(const QString &id, const QString &status) {
         if (!pairs.contains(id)) return;
-        const auto p = pairs.take(id);
+        const auto p = pairs.take(id); const QPointer<RelayServer> alive(q);
         if (p.host) pairing(p.host, p.hostRequest, status, {{"pairingId", id}, {"peerId", sessions.value(p.client).id}, {"name", sessions.value(p.client).name}});
+        if (!alive) return;
         if (p.client) pairing(p.client, p.clientRequest, status, {{"pairingId", id}, {"peerId", sessions.value(p.host).id}, {"name", sessions.value(p.host).name}});
     }
     void cancelPairing(WebSocket *s, const QString &request = {}) {
+        const QPointer<RelayServer> alive(q);
         for (const auto &hash : offers.keys()) {
             const auto o = offers.value(hash);
             if (o.host == s && (request.isEmpty() || o.request == request)) {
                 offers.remove(hash); pairing(s, o.request, "cancelled");
+                if (!alive) return;
             }
         }
         for (const auto &id : pairs.keys()) {
             const auto p = pairs.value(id);
             if ((p.host == s && (request.isEmpty() || p.hostRequest == request))
-                || (p.client == s && (request.isEmpty() || p.clientRequest == request))) finishPair(id, "cancelled");
+                || (p.client == s && (request.isEmpty() || p.clientRequest == request))) { finishPair(id, "cancelled"); if (!alive) return; }
         }
     }
     bool pairMessage(WebSocket *s, const QJsonObject &m) {
@@ -117,43 +155,52 @@ public:
                 peers.append(it->descriptor);
         send(s, {{"type", "peers"}, {"peers", peers}});
     }
-    void changed() { const auto all = sessions.keys(); for (auto *s : all) directory(s); }
+    void changed() { const QPointer<RelayServer> alive(q); const auto all = sessions.keys(); for (auto *s : all) { if (sessions.contains(s)) directory(s); if (!alive) return; } }
     void remove(WebSocket *s) {
+        const QPointer<RelayServer> alive(q);
         cancelPairing(s);
+        if (!alive) return;
         sessions.remove(s);
         for (const auto &key : routes.keys()) {
             const auto r = routes.value(key);
             if (r.client == s || r.host == s) {
                 routes.remove(key);
                 if (r.client && r.client != s) send(r.client, {{"type", "response"}, {"id", r.id}, {"result", protocol::error("host_offline")}});
+                if (!alive) return;
             }
         }
-        s->deleteLater(); changed();
+        s->deleteLater(); changed(); if (alive) schedule();
     }
     void sweep() {
-        const auto now = QDateTime::currentDateTimeUtc();
+        const auto now = QDateTime::currentDateTimeUtc(); const QPointer<RelayServer> alive(q);
         for (const auto &hash : offers.keys()) {
             const auto o = offers.value(hash);
-            if (o.expires <= now || !active(o.host)) { offers.remove(hash); if (o.host) pairing(o.host, o.request, "expired"); }
+            if (!o.expires.isValid() || o.expires <= now || !active(o.host)) { offers.remove(hash); if (o.host) pairing(o.host, o.request, "expired"); if (!alive) return; }
         }
         for (const auto &id : pairs.keys()) {
             const auto p = pairs.value(id);
-            if (p.expires <= now || !active(p.host) || !active(p.client)) finishPair(id, "expired");
+            if (!p.expires.isValid() || p.expires <= now || !active(p.host) || !active(p.client)) { finishPair(id, "expired"); if (!alive) return; }
         }
         for (auto *s : sessions.keys()) {
-            const auto state = sessions.value(s);
+            if (!sessions.contains(s)) continue;
+            const auto state = sessions.value(s); if (state.closing) continue;
             if ((!state.principal.accountId.isEmpty() && !live(state.principal))
-                || (state.principal.accountId.isEmpty() && state.connected.msecsTo(now) > 7000))
+                || (state.principal.accountId.isEmpty() && state.connected.msecsTo(now) > 7000)) {
+                sessions[s].closing = true;
                 s->close(1008, "Authentication expired");
-            else s->ping();
+                if (!alive) return;
+            }
         }
-        for (const auto &id : routes.keys()) if (routes.value(id).expires < now) {
+        for (const auto &id : routes.keys()) if (!routes.value(id).expires.isValid() || routes.value(id).expires <= now) {
             const auto r = routes.take(id);
             if (r.client) send(r.client, {{"type", "response"}, {"id", r.id}, {"result", protocol::error("timeout")}});
+            if (!alive) return;
         }
     }
     void message(WebSocket *s, const QJsonObject &m) {
         if (!sessions.contains(s)) return;
+        const QPointer<RelayServer> alive(q);
+        const auto reschedule = qScopeGuard([this, alive] { if (alive) schedule(); });
         const auto type = m.value("type").toString();
         if (type == "auth") {
             auto &session = sessions[s];
@@ -165,13 +212,15 @@ public:
                 if (!owner || !socket || !sessions.contains(socket)) return;
                 auto &state = sessions[socket]; state.authenticating = false;
                 if (!live(p) || (!state.principal.accountId.isEmpty() && p.accountId != state.principal.accountId)) {
-                    cancelPairing(socket); state.principal = {};
-                    send(socket, {{"type", "error"}, {"error", "unauthenticated"}}); socket->close(); return;
+                    cancelPairing(socket); if (!owner || !socket || !sessions.contains(socket)) return;
+                    sessions[socket].principal = {}; sessions[socket].closing = true;
+                    send(socket, {{"type", "error"}, {"error", "unauthenticated"}}); if (socket) socket->close(); if (owner) schedule(); return;
                 }
                 // Limit even custom verifiers to a one-minute revocation window.
                 p.expiresAt = qMin(p.expiresAt, QDateTime::currentDateTimeUtc().addSecs(60));
                 state.principal = p;
                 send(socket, {{"type", "authenticated"}, {"accountId", p.accountId}});
+                if (owner) schedule();
             }); return;
         }
         if (!active(s)) { s->close(1008, "Authentication required"); return; }
@@ -240,19 +289,21 @@ bool RelayServer::listen(const Address &address, quint16 port, const TlsConfigur
     stop(); d->error.clear();
     if (!d->auth) { d->error = "An account authenticator is required."; return false; }
     d->server = listener(address, port, tls, d->error); if (!d->server) return false;
+    d->running = true;
     connect(d->server.get(), &WebSocketServer::newConnection, this, [this] {
         while (d->server->hasPendingConnections()) {
             auto *s = d->server->nextPendingConnection(); s->setParent(this);
             if (d->sessions.size() >= 128) { s->close(); s->deleteLater(); continue; }
             d->sessions.insert(s, {});
+            d->schedule();
             connect(s, &WebSocket::textMessageReceived, this, [this, s](const QString &m) { d->message(s, parse(m)); });
             connect(s, &WebSocket::binaryMessageReceived, s, [s] { s->close(); });
             connect(s, &WebSocket::disconnected, this, [this, s] { d->remove(s); });
         }
-    }); d->timer.start(); return true;
+    }); return true;
 }
 void RelayServer::stop() {
-    d->timer.stop(); d->server.reset();
+    d->running = false; d->timer.stop(); d->heartbeat.stop(); d->server.reset();
     const auto sockets = d->sessions.keys(); d->sessions.clear(); d->routes.clear(); d->offers.clear(); d->pairs.clear();
     for (auto *s : sockets) { s->disconnect(this); s->abort(); delete s; }
 }

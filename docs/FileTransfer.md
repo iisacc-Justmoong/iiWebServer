@@ -137,25 +137,18 @@ NFSv3에는 계정 인증이 없다. loopback 또는 운영자가 별도로 통�
 데스크톱은 `IIWEBSERVER_WITH_CURL=ON`, `IIWEBSERVER_WITH_STORAGE_PROCESS=ON`이 기본이다. libcurl 7.85 이상과 개발 헤더가 필요하며 `CURL_ROOT`로 선택한다. 모바일은 두 옵션이 기본 OFF이다. 모바일용 libcurl을 별도로 준비한 경우 직접 전송을 활성화할 수 있다. 프로세스 백엔드를 비활성화하면 QProcess 헤더를 포함하지 않는 구현으로 빌드하고 `external_backend_disabled`를 반환한다. 기존 WS/WSS 기능은 유지된다.
 
 ```sh
-python3 tools/setup-protocol-tests.py
+python3 -B tools/setup-protocol-tests.py
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \
-  -DCMAKE_PREFIX_PATH=/Volumes/Storage/Qt/6.8.3/macos \
+  -DCMAKE_PREFIX_PATH="/Volumes/Storage/Qt/6.8.3/macos;$HOME/.local/SDK/iiNetwork;$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;$HOME/.local/SDK/iiFileProvider" \
   -DCURL_ROOT=/opt/homebrew/opt/curl \
-  -DPython3_EXECUTABLE="$PWD/build/protocol-deps/venv/bin/python" \
-  -DCMAKE_INSTALL_PREFIX="$PWD/build/protocol-stage"
+  -DPython3_EXECUTABLE="$PWD/resources/dependencies/protocol/venv/bin/python" \
+  -DCMAKE_INSTALL_PREFIX="$HOME/.local/SDK/iiWebServer"
 cmake --build build --parallel 4
 # setup-protocol-tests.py가 출력하는 rclone 경로를 사용한다.
-IIWEBSERVER_TEST_RCLONE="$PWD/build/protocol-deps/rclone-v1.75.1-osx-arm64/rclone" \
+IIWEBSERVER_TEST_RCLONE="$PWD/resources/dependencies/protocol/rclone-v1.75.1-osx-arm64/rclone" \
   ctest --test-dir build --output-on-failure
-cmake --install build
-cmake -S tests/consumer -B build/protocol-consumer/build \
-  -DCMAKE_PREFIX_PATH="$PWD/build/protocol-stage;/Volumes/Storage/Qt/6.8.3/macos" \
-  -DPython3_EXECUTABLE="$PWD/build/protocol-deps/venv/bin/python"
-cmake --build build/protocol-consumer/build --parallel 4
-IIWEBSERVER_TEST_RCLONE="$PWD/build/protocol-deps/rclone-v1.75.1-osx-arm64/rclone" \
-  ctest --test-dir build/protocol-consumer/build --output-on-failure
 ```
 
-준비 스크립트는 고정 버전 rclone을 공식 HTTPS 배포에서 받아 SHA-256을 확인하고 `build/`에만 테스트 의존성을 준비한다. 전역 패키지·실제 NAS 설정·클라우드 계정·유료 리소스를 변경하지 않는다. 프로토콜 테스트는 임시 루트와 loopback 서버를 사용한다. 공용 WAN, 실제 NAS 하드웨어, 클라우드 계정별 OAuth, 모바일 기기 실행은 별도의 검증이다.
+준비 스크립트는 고정 버전 rclone을 공식 HTTPS 배포에서 받아 SHA-256을 확인하고 `resources/dependencies/protocol/`에 테스트 의존성을 준비한다. 프로토콜 테스트는 명시적으로 실행할 때 임시 루트와 loopback 서버를 사용한다. 전역 패키지·실제 NAS 설정·클라우드 계정·유료 리소스를 변경하지 않는다. 공용 WAN, 실제 NAS 하드웨어, 클라우드 계정별 OAuth, 모바일 기기 실행은 별도의 검증이다.
 
 SMB2 통합 테스트는 Windows에서 SMBLibrary 고정 소스의 검사 전용 .NET 프로세스, Unix에서 Impacket 0.13.1 서버로 인증·업로드·다운로드·목록·삭제를 검사한다. 이 서버의 실험 구현에서 관측한 LOGOFF 세션 ID, 없는 파일의 CREATE 상태, EOF READ 오류 구조는 `tests/smb_fixture.py`에 명시한 보정으로 표준 응답에 맞춘다. SDK의 SMB 클라이언트는 수정하지 않는다. 이 결과가 모든 NAS 제조사·SMB3 암호화 조합을 검증했다는 의미는 아니다. [SMB2 LOGOFF 응답](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-smb2/0936b9c0-51a3-4e7f-8fdf-de008f2675ed)과 [Samba의 CREATE 검사](https://github.com/samba-team/samba/blob/master/source4/torture/smb2/create.c)를 기준으로 삼는다.

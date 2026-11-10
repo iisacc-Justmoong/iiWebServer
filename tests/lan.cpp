@@ -1,8 +1,10 @@
+#include "TestPaths.h"
 #include <NetworkTransport.h>
 #include <iiWebServer.h>
 #include <QFile>
 #include <QSignalSpy>
 #include <QTemporaryDir>
+#include <QTimer>
 #include <QTest>
 #include "../src/Protocol/BinaryFrame.h"
 #include <QMessageAuthenticationCode>
@@ -21,6 +23,19 @@ TlsConfiguration trustCertificate(const QString &fingerprint) {
 class LanTests : public QObject {
     Q_OBJECT
 private slots:
+    void idleHostSchedulesOnlyActualDeadlines() {
+        LanPeer host;
+        QVERIFY(host.startHost("desktop", "Desktop", [](const auto &, const auto &) {
+            return QJsonObject{{"ok", true}, {"entries", QJsonArray()}};
+        }, {"127.0.0.1"}, Address::loopback()));
+        auto *timer = host.findChild<QTimer *>(QStringLiteral("LanPeer.deadline"), Qt::FindDirectChildrenOnly);
+        QVERIFY(timer); QVERIFY(timer->isSingleShot()); QVERIFY(!timer->isActive());
+        QVERIFY(!host.createOffer(2).isEmpty()); QVERIFY(timer->isActive());
+        QSignalSpy changed(&host, &LanPeer::changed);
+        QTRY_COMPARE_WITH_TIMEOUT(host.secondsRemaining(), 1, 1800);
+        QVERIFY(!changed.isEmpty());
+        host.cancelPairing(); QVERIFY(!timer->isActive());
+    }
     void accountProofRequiredBeforeFiles_data() {
         QTest::addColumn<QByteArray>("clientKey");
         QTest::newRow("same-account") << QByteArray("account-one");
@@ -170,7 +185,7 @@ private slots:
         }
     }
     void noRelayPairingAndFiles() {
-        QTemporaryDir root(TEST_DIRECTORY "/lan-XXXXXX");
+        QTemporaryDir root(testDirectory() + "/lan-XXXXXX");
         QFile file(root.filePath("hello.txt")); QVERIFY(file.open(QIODevice::WriteOnly)); file.write("local bytes"); file.close();
         FileShare share(root.path()); LanPeer host, client, replay;
         QVERIFY(host.startHost("desktop", "My Desktop", [&](const auto &, const auto &r) { return share.handle(r); }, {"127.0.0.1"}, Address::loopback()));

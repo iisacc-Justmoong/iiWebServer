@@ -3,6 +3,30 @@ project(iiWebServer VERSION 0.6.1 LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CTest)
+if(PROJECT_IS_TOP_LEVEL AND UNIX AND CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
+    include(cmake/ResourceLinks.cmake)
+    web_compat_links("${CMAKE_CURRENT_SOURCE_DIR}/resources" "${CMAKE_CURRENT_BINARY_DIR}")
+endif()
+if(BUILD_TESTING)
+    find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
+    set(_web_user_home "$ENV{HOME}")
+    if(_web_user_home STREQUAL "")
+        set(_web_user_home "$ENV{USERPROFILE}")
+    endif()
+    set(IIWEBSERVER_TEST_PROVIDER_PYTHON_DIR
+        "${_web_user_home}/.local/SDK/iiFileProvider/share/iiFileProvider/python"
+        CACHE PATH "iiFileProvider Python adapter used by the resource test runner")
+    unset(_web_user_home)
+    function(web_resource_test name)
+        add_test(NAME "${name}" COMMAND "${Python3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/resource_runner.py"
+            --provider-python "${IIWEBSERVER_TEST_PROVIDER_PYTHON_DIR}"
+            --resources "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+            --cmake "${CMAKE_COMMAND}"
+            --certificate-script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/TestCertificate.cmake"
+            --script-dir "${CMAKE_CURRENT_SOURCE_DIR}/tools" ${ARGN})
+    endfunction()
+endif()
 option(BUILD_SHARED_LIBS "Build shared libraries (disable for iOS)" ON)
 option(IIWEBSERVER_BUILD_COMPATIBILITY "Build the existing Qt Core LAN/relay API and tools" ON)
 set(IIWEBSERVER_NEEDS_CRYPTO FALSE)
@@ -17,7 +41,7 @@ if(PROJECT_IS_TOP_LEVEL AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${_user_home}/.local/SDK/iiWebServer" CACHE PATH "Install prefix" FORCE)
 endif()
 
-find_package(iiNetwork 0.5 CONFIG REQUIRED HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../iiNetwork/build/package" "$ENV{HOME}/.local/SDK/iiNetwork")
+find_package(iiNetwork 0.5 CONFIG REQUIRED HINTS "$ENV{IINETWORK_PREFIX}" "$ENV{HOME}/.local/SDK/iiNetwork")
 if(NOT iiNetwork_HTTP_SERVER_LIFECYCLE AND NOT TARGET iiNetwork)
     message(FATAL_ERROR "Rebuild iiNetwork with HTTP shutdown and response deadlines before building iiWebServer")
 endif()
@@ -66,17 +90,17 @@ if(BUILD_TESTING)
     endforeach()
     if(TARGET ii-http-server)
         find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
-        add_test(NAME iiWebServer.http.cli COMMAND "${Python3_EXECUTABLE}" -B
-            "${CMAKE_CURRENT_SOURCE_DIR}/tests/http_cli.py" "$<TARGET_FILE:ii-http-server>" "${CMAKE_CURRENT_BINARY_DIR}")
+        web_resource_test(iiWebServer.http.cli -- "${Python3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/http_cli.py" "$<TARGET_FILE:ii-http-server>" "@WORK@")
         set_tests_properties(iiWebServer.http.cli PROPERTIES TIMEOUT 45)
         set(IIWEBSERVER_TEST_NGINX "" CACHE FILEPATH "Optional nginx binary for real TLS reverse-proxy integration")
         if(IIWEBSERVER_TEST_NGINX)
             get_filename_component(_http_openssl_prefix "${OPENSSL_INCLUDE_DIR}" DIRECTORY)
             find_program(IIWEBSERVER_TEST_OPENSSL_COMMAND NAMES openssl HINTS "${_http_openssl_prefix}/bin" REQUIRED)
             find_program(IIWEBSERVER_TEST_CURL_COMMAND NAMES curl REQUIRED)
-            add_test(NAME iiWebServer.http.nginx COMMAND "${Python3_EXECUTABLE}" -B
+            web_resource_test(iiWebServer.http.nginx -- "${Python3_EXECUTABLE}" -B
                 "${CMAKE_CURRENT_SOURCE_DIR}/tests/nginx_http.py" "${IIWEBSERVER_TEST_NGINX}"
-                "$<TARGET_FILE:ii-http-server>" "${CMAKE_CURRENT_BINARY_DIR}"
+                "$<TARGET_FILE:ii-http-server>" "@WORK@"
                 "${IIWEBSERVER_TEST_OPENSSL_COMMAND}" "${IIWEBSERVER_TEST_CURL_COMMAND}")
             set_tests_properties(iiWebServer.http.nginx PROPERTIES TIMEOUT 120)
         endif()
@@ -120,7 +144,7 @@ foreach(_header IN LISTS _compat_public_headers)
         CONTENT "#pragma once\n#include \"${_header}\"\n")
 endforeach()
 add_library(iiWebServer src/Compatibility/iiWebServer.h src/Compatibility/iiWebServer.cpp src/Peers/WebServer.h src/Compatibility/iiWebServerExport.h
-    src/Transport/NetworkTransport.h src/Transport/NetworkTransport.cpp src/Transport/NetworkTypes.h
+    src/Transport/NetworkTransport.h src/Transport/NetworkTransport.cpp src/Transport/NetworkTypes.h src/Transport/RuntimePump.h src/Transport/RuntimePump.cpp
     src/Protocol/Protocol.h src/Protocol/BinaryFrame.h src/Peers/SessionAuthenticator.cpp src/Peers/RelayServer.cpp src/Peers/Peer.cpp src/FileSharing/FileShare.cpp src/Peers/PairingLink.cpp src/Peers/PairingLink.h src/Peers/LanPeer.cpp src/Peers/LanPeer.h
     src/Transfer/Transfer.h src/Transfer/Transfer.cpp src/Storage/StorageBridge.h src/Storage/StorageBridge.cpp)
 set(_transfer_default ON)
@@ -144,11 +168,6 @@ if(IIWEBSERVER_WITH_CURL)
     target_compile_definitions(iiWebServer PRIVATE IIWEBSERVER_CURL=1)
 endif()
 if(NOT IOS AND NOT ANDROID)
-    configure_file(tools/ftp_server.py "${CMAKE_CURRENT_BINARY_DIR}/ftp_server.py" COPYONLY)
-    configure_file(tools/provider_fs.py "${CMAKE_CURRENT_BINARY_DIR}/provider_fs.py" COPYONLY)
-    file(COPY "${iiFileProviderNative_PYTHON_DIRECTORY}/ii_file_provider"
-        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
-        FILES_MATCHING PATTERN "*.py" PATTERN "__pycache__" EXCLUDE)
     install(FILES tools/ftp_server.py tools/provider_fs.py tools/ftp-requirements.txt
         DESTINATION ${CMAKE_INSTALL_DATADIR}/iiWebServer)
     install(DIRECTORY "${iiFileProviderNative_PYTHON_DIRECTORY}/ii_file_provider"
@@ -157,11 +176,6 @@ if(NOT IOS AND NOT ANDROID)
     get_target_property(_provider_kind iiFileProvider::Native TYPE)
     get_target_property(_provider_imported iiFileProvider::Native IMPORTED)
     if(_provider_kind STREQUAL "SHARED_LIBRARY")
-        add_custom_target(iiWebServerProviderRuntime ALL
-            COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/lib"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:iiFileProvider::Native>"
-                "${CMAKE_CURRENT_BINARY_DIR}/lib/$<TARGET_FILE_NAME:iiFileProvider::Native>"
-            DEPENDS iiFileProvider::Native VERBATIM)
         if(WIN32)
             # ctypes resolves transitive dependencies beside the loaded DLL;
             # PATH entries alone are insufficient on current Python versions.
@@ -175,9 +189,6 @@ if(NOT IOS AND NOT ANDROID)
                     HINTS "${_sqlite_library_directory}/../bin" NO_DEFAULT_PATH)
             endif()
             if(IIWEBSERVER_SQLITE_RUNTIME)
-                add_custom_command(TARGET iiWebServerProviderRuntime POST_BUILD
-                    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${IIWEBSERVER_SQLITE_RUNTIME}"
-                        "${CMAKE_CURRENT_BINARY_DIR}/lib/sqlite3.dll" VERBATIM)
                 install(FILES "${IIWEBSERVER_SQLITE_RUNTIME}" DESTINATION ${CMAKE_INSTALL_BINDIR})
             endif()
         endif()
@@ -222,17 +233,37 @@ elseif(UNIX)
 endif()
 
 if(BUILD_TESTING)
-    include(cmake/TestCertificate.cmake)
     find_package(Qt6 6.8.3 EXACT REQUIRED COMPONENTS Test)
+    add_executable(iiWebServerRuntimePumpTests tests/runtime_pump.cpp src/Transport/RuntimePump.cpp)
+    target_link_libraries(iiWebServerRuntimePumpTests PRIVATE iiWebServer::iiWebServer Qt6::Core)
+    add_test(NAME iiWebServer.runtime_pump COMMAND iiWebServerRuntimePumpTests)
+    set_tests_properties(iiWebServer.runtime_pump PROPERTIES TIMEOUT 20)
+    add_test(NAME iiWebServer.resource_runner COMMAND "${CMAKE_COMMAND}" -E env
+        "PYTHONPATH=${IIWEBSERVER_TEST_PROVIDER_PYTHON_DIR}" "${Python3_EXECUTABLE}" -B
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_resource_runner.py")
+    web_resource_test(iiWebServer.resource_paths -- "${Python3_EXECUTABLE}" -B
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_resource_paths.py"
+        "${IIWEBSERVER_TEST_PROVIDER_PYTHON_DIR}" "@WORK@")
+    if(UNIX)
+        web_resource_test(iiWebServer.resource_links -- "${Python3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_resource_links.py" "${CMAKE_COMMAND}"
+            "${IIWEBSERVER_TEST_PROVIDER_PYTHON_DIR}" "@WORK@")
+        web_resource_test(iiWebServer.install_policy -- "${Python3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_install_policy.py"
+            "${IIWEBSERVER_TEST_PROVIDER_PYTHON_DIR}" "@WORK@")
+    endif()
+    if(_provider_kind STREQUAL "SHARED_LIBRARY")
+        web_resource_test(iiWebServer.resource_fixture -- "${Python3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_resource_fixture.py" "${CMAKE_COMMAND}"
+            "${IIWEBSERVER_TEST_PROVIDER_PYTHON_DIR}" "$<TARGET_FILE:iiFileProvider::Native>" "@WORK@")
+    endif()
     add_executable(iiWebServerLanTests tests/lan.cpp)
     target_link_libraries(iiWebServerLanTests PRIVATE iiWebServer::iiWebServer Qt6::Test)
-    target_compile_definitions(iiWebServerLanTests PRIVATE TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
-    add_test(NAME iiWebServer.lan COMMAND iiWebServerLanTests)
+    web_resource_test(iiWebServer.lan -- "$<TARGET_FILE:iiWebServerLanTests>")
     set_tests_properties(iiWebServer.lan PROPERTIES TIMEOUT 45)
     add_executable(iiWebServerTests tests/hosting.cpp tests/NetworkFixture.h)
     target_link_libraries(iiWebServerTests PRIVATE iiWebServer::iiWebServer Qt6::Test)
-    target_compile_definitions(iiWebServerTests PRIVATE TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
-    add_test(NAME iiWebServer.hosting COMMAND iiWebServerTests)
+    web_resource_test(iiWebServer.hosting --certificates -- "$<TARGET_FILE:iiWebServerTests>")
     add_executable(iiWebServerPairingTests tests/pairing.cpp)
     target_link_libraries(iiWebServerPairingTests PRIVATE iiWebServer::iiWebServer Qt6::Test)
     add_test(NAME iiWebServer.pairing COMMAND iiWebServerPairingTests)
@@ -244,8 +275,7 @@ if(BUILD_TESTING)
     add_test(NAME iiWebServer.hello_world COMMAND iiWebServerHelloWorld)
     add_executable(iiWebServerTransferTests tests/transfer.cpp tests/NetworkFixture.h)
     target_link_libraries(iiWebServerTransferTests PRIVATE iiWebServer::iiWebServer Qt6::Test)
-    target_compile_definitions(iiWebServerTransferTests PRIVATE TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
-    add_test(NAME iiWebServer.transfer COMMAND iiWebServerTransferTests)
+    web_resource_test(iiWebServer.transfer -- "$<TARGET_FILE:iiWebServerTransferTests>")
     set_tests_properties(iiWebServer.transfer PROPERTIES TIMEOUT 45)
     add_executable(iiWebServerOptionalBackendTests tests/optional_backends.cpp)
     target_link_libraries(iiWebServerOptionalBackendTests PRIVATE iiWebServer::iiWebServer Qt6::Test)
@@ -255,8 +285,7 @@ if(BUILD_TESTING)
     if(IIWEBSERVER_WITH_STORAGE_PROCESS)
         add_executable(iiWebServerStorageTests tests/storage_bridge.cpp)
         target_link_libraries(iiWebServerStorageTests PRIVATE iiWebServer::iiWebServer Qt6::Test)
-        target_compile_definitions(iiWebServerStorageTests PRIVATE TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
-        add_test(NAME iiWebServer.storage COMMAND iiWebServerStorageTests)
+        web_resource_test(iiWebServer.storage -- "$<TARGET_FILE:iiWebServerStorageTests>")
         set_tests_properties(iiWebServer.storage PROPERTIES TIMEOUT 180)
     endif()
 endif()
@@ -293,45 +322,53 @@ if(NOT IOS AND NOT ANDROID)
         if(WIN32)
             find_program(IIWEBSERVER_DOTNET_EXECUTABLE NAMES dotnet REQUIRED)
             set(_smb_fixture_directory "${CMAKE_CURRENT_BINARY_DIR}/smb-fixture")
+            set(_smb_fixture_resources "${CMAKE_CURRENT_SOURCE_DIR}/resources/dependencies/smb-fixture")
             set(_smb_fixture_project "${CMAKE_CURRENT_SOURCE_DIR}/tests/SmbWindowsFixture/SmbWindowsFixture.csproj")
             set(_smb_fixture_dll "${_smb_fixture_directory}/SmbWindowsFixture.dll")
             add_custom_command(OUTPUT "${_smb_fixture_dll}"
                 COMMAND "${CMAKE_COMMAND}" -E env
-                    "DOTNET_CLI_HOME=${_smb_fixture_directory}/home"
-                    "NUGET_PACKAGES=${_smb_fixture_directory}/packages"
+                    "DOTNET_CLI_HOME=${_smb_fixture_resources}/home"
+                    "NUGET_PACKAGES=${_smb_fixture_resources}/packages"
                     DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
                     "${Python3_EXECUTABLE}" -B
                     "${CMAKE_CURRENT_SOURCE_DIR}/tests/SmbWindowsFixture/prepare_source.py"
-                    "${_smb_fixture_directory}"
+                    "${_smb_fixture_resources}"
                 COMMAND "${CMAKE_COMMAND}" -E env
-                    "DOTNET_CLI_HOME=${_smb_fixture_directory}/home"
-                    "NUGET_PACKAGES=${_smb_fixture_directory}/packages"
+                    "DOTNET_CLI_HOME=${_smb_fixture_resources}/home"
+                    "NUGET_PACKAGES=${_smb_fixture_resources}/packages"
                     DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
                     "${IIWEBSERVER_DOTNET_EXECUTABLE}" build "${_smb_fixture_project}"
                     --configuration Release --output "${_smb_fixture_directory}" --nologo
                     "-p:BaseIntermediateOutputPath=${_smb_fixture_directory}/obj/"
-                    "-p:SMBSourceRoot=${_smb_fixture_directory}/SMBLibrary-582635541d2ec0c84eac5f66cbebd41e2d35c7ae"
+                    "-p:SMBSourceRoot=${_smb_fixture_resources}/SMBLibrary-582635541d2ec0c84eac5f66cbebd41e2d35c7ae"
                 DEPENDS "${_smb_fixture_project}"
                     tests/SmbWindowsFixture/Program.cs tests/SmbWindowsFixture/prepare_source.py
                 VERBATIM)
             add_custom_target(iiWebServerSmbFixture ALL DEPENDS "${_smb_fixture_dll}")
             set(_smb_fixture_arguments "${IIWEBSERVER_DOTNET_EXECUTABLE}" "${_smb_fixture_dll}")
         endif()
-        add_test(NAME iiWebServer.provider_ftp COMMAND "${Python3_EXECUTABLE}" -B
-            "${CMAKE_CURRENT_SOURCE_DIR}/tests/provider_ftp.py" "${CMAKE_CURRENT_BINARY_DIR}")
+        set(_web_ftp_args --ftp)
+        if(_provider_kind STREQUAL "SHARED_LIBRARY")
+            list(APPEND _web_ftp_args --provider-lib "$<TARGET_FILE:iiFileProvider::Native>")
+        endif()
+        if(IIWEBSERVER_SQLITE_RUNTIME)
+            list(APPEND _web_ftp_args --sqlite-lib "${IIWEBSERVER_SQLITE_RUNTIME}")
+        endif()
+        web_resource_test(iiWebServer.provider_ftp --certificates ${_web_ftp_args} -- "${Python3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/provider_ftp.py" "@WORK@")
         set_tests_properties(iiWebServer.provider_ftp PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 60)
-        add_test(NAME iiWebServer.provider_ftps COMMAND "${Python3_EXECUTABLE}" -B
-            "${CMAKE_CURRENT_SOURCE_DIR}/tests/provider_ftp.py" "${CMAKE_CURRENT_BINARY_DIR}" --implicit)
+        web_resource_test(iiWebServer.provider_ftps --certificates ${_web_ftp_args} -- "${Python3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/provider_ftp.py" "@WORK@" --implicit)
         set_tests_properties(iiWebServer.provider_ftps PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 60)
         add_test(NAME iiWebServer.fixture_cleanup COMMAND "${Python3_EXECUTABLE}" -B
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixture_directory.py")
-        add_test(NAME iiWebServer.protocol_processes COMMAND "${Python3_EXECUTABLE}" -B
+        web_resource_test(iiWebServer.protocol_processes --certificates ${_web_ftp_args} -- "${Python3_EXECUTABLE}" -B
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/process_protocols.py" "$<TARGET_FILE:ii-file-transfer>"
-            "$<TARGET_FILE:ii-storage>" "${CMAKE_CURRENT_BINARY_DIR}" ${_smb_fixture_arguments})
+            "$<TARGET_FILE:ii-storage>" "@WORK@" ${_smb_fixture_arguments})
         set_tests_properties(iiWebServer.protocol_processes PROPERTIES TIMEOUT 600 SKIP_RETURN_CODE 77)
-        add_test(NAME iiWebServer.process_hosting COMMAND "${Python3_EXECUTABLE}" -B
+        web_resource_test(iiWebServer.process_hosting -- "${Python3_EXECUTABLE}" -B
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/process_hosting.py" "$<TARGET_FILE:ii-server-relay>"
-            "$<TARGET_FILE:ii-web-server>" "${CMAKE_CURRENT_BINARY_DIR}")
+            "$<TARGET_FILE:ii-web-server>" "@WORK@")
         set_tests_properties(iiWebServer.process_hosting PROPERTIES TIMEOUT 45)
     endif()
 endif()
