@@ -1,4 +1,5 @@
 #include "WebServer.h"
+#include "SessionResponse.h"
 #include "Protocol.h"
 #include "../Transport/RuntimePump.h"
 #include <iiNetwork/Http.h>
@@ -33,12 +34,8 @@ void SessionAuthenticator::authenticate(const QByteArray &cookie, AuthCompletion
     auto result = http->request(std::move(request), [owner, id, done](ii::network::HttpResponse response) {
         if (!owner) return;
         Principal principal;
-        if (response.error.empty() && response.status == 200 && response.body.size() <= 65536
-            && QString::fromStdString(response.content_type).section(';', 0, 0).trimmed().compare("application/json", Qt::CaseInsensitive) == 0) {
-            const auto envelope = QJsonDocument::fromJson(QByteArray(response.body.data(), response.body.size())).object();
-            const auto account = envelope.contains("errors") ? QJsonObject{}
-                : envelope.value("data").toObject().value("accountSession").toObject().value("account").toObject();
-            principal.accountId = account.value("sub").toString();
+        if (const auto subject = detail::accountSessionSubject(response)) {
+            principal.accountId = QString::fromUtf8(subject->data(), static_cast<qsizetype>(subject->size()));
             principal.expiresAt = QDateTime::currentDateTimeUtc().addSecs(60);
             if (!protocol::live(principal)) principal = {};
         }

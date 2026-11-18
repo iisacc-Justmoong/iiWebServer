@@ -8,7 +8,7 @@
 
 ## 전송 계층
 
-TCP 연결과 리스너, TLS 1.2/1.3, RFC 6455 WebSocket 프레이밍, 인증 서버에 보내는 HTTP 요청과 IP 주소·인터페이스 조회는 `iiNetwork` 0.5 이상을 사용한다. Qt Network와 Qt WebSockets를 빌드·설치 의존성으로 요구하지 않는다. GUI 소비자가 사용하는 기존 QObject 신호와 QString/QJsonObject 공개 계약은 Qt Core 경계에서 유지한다. `NetworkTransport`는 이 신호 경계와 iiSDKCore 이벤트 루프의 호스트 구동만 담당한다.
+TCP 연결과 리스너, TLS 1.2/1.3, RFC 6455 WebSocket 프레이밍, 인증 서버에 보내는 HTTP 요청과 IP 주소·인터페이스 조회는 `iiNetwork` 0.6.1 이상을 사용한다. Qt Network와 Qt WebSockets를 빌드·설치 의존성으로 요구하지 않는다. GUI 소비자가 사용하는 기존 QObject 신호와 QString/QJsonObject 공개 계약은 Qt Core 경계에서 유지한다. `NetworkTransport`는 이 신호 경계와 iiSDKCore 이벤트 루프의 호스트 구동만 담당한다.
 
 `Address`는 `ii::network::IpAddress`, `TlsConfiguration`은 `ii::network::TlsOptions`의 별칭이다. 주소는 `Address::parse()`의 성공 여부를 확인하여 구성한다. 루프백은 `Address::loopback()`, IPv4 전체 바인딩은 `Address::any()`이다. PEM 파일을 쓰는 서버는 `tls.policy.identity.certificate_chain_file`과 `private_key_file`을 함께 설정한다. 릴레이 신뢰 CA는 `tls.policy.ca_file`로 지정한다. 인증서·키 불일치와 유효하지 않은 TLS 정책은 연결을 거부한다.
 
@@ -55,3 +55,5 @@ QR에 기록된 지문과 서버 인증서가 다르면 페어링을 완료하�
 `LanTests::certificatePinMismatchNeverPairs`는 오류 원인에 인증서 검증 실패가 남아 있는지도
 확인하며, 실패 시 실제 오류 문자열을 출력한다. 네이티브 TLS 계층은 연결별 검증 상태로
 원인을 보존하므로 오류 큐나 콜백 순서 차이가 일반 핸드셰이크 실패로 이를 가리지 않아야 한다.
+
+계정 세션 HTTP 응답은 iiNetwork 0.6.1 이상과 iiJson 0.1.2 이상으로 해석한다. 두 라이브러리는 같은 iiJson 값 ABI로 다시 빌드한 패키지를 사용한다. 정상 완료된 200 응답과 `application/json`만 허용하며 64 KiB를 넘거나 JSON 오류, GraphQL `errors`, 누락·비문자열·빈 계정 식별자가 있으면 인증하지 않는다. 중복 JSON 키는 기존 계약에 따라 마지막 값을 사용한다. iiJson의 UTF-8·JSON 문법 및 깊이 제한을 통과해야 하며, 네트워크 없이 합성 응답으로 이 경계를 검사할 수 있다. 공개 QObject API의 식별자 길이·만료 검증은 별도로 유지한다.

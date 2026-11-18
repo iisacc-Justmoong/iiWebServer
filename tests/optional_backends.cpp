@@ -1,33 +1,73 @@
 #include "iiWebServer.h"
-#include <QtTest/QSignalSpy>
-#include <QtTest/QTest>
+#include <QCoreApplication>
+#include <QEventLoop>
+#include <QTimer>
 
-class OptionalBackendTests : public QObject {
-    Q_OBJECT
-private slots:
-    void featureConfigurationMatchesLinkedArtifact() {
-        using namespace iiWebServer;
-        QCOMPARE(!FileTransfer::backendVersion().isEmpty(), bool(TEST_CURL_ENABLED));
-        QCOMPARE(!FileTransfer::protocols().isEmpty(), bool(TEST_CURL_ENABLED));
-        if (!TEST_CURL_ENABLED) {
-            FileTransfer transfer;
-            QSignalSpy finished(&transfer, &FileTransfer::finished);
-            transfer.start({});
-            QTRY_COMPARE(finished.size(), 1);
-            QCOMPARE(qvariant_cast<TransferResult>(finished[0][1]).error, "backend_unavailable");
-        }
-        StorageBridgeOptions backend;
-        backend.executable = "/nonexistent/iiWebServer-fixture-rclone";
-        StorageBridge storage(backend);
-        QSignalSpy finished(&storage, &StorageBridge::finished);
-        storage.start({StorageOperation::Providers});
-        QTRY_COMPARE(finished.size(), 1);
-        QCOMPARE(qvariant_cast<StorageResult>(finished[0][1]).error,
-                 TEST_PROCESS_ENABLED ? "backend_unavailable" : "external_backend_disabled");
-        FileProtocolServer server(backend);
-        QVERIFY(!server.start({}));
-        QCOMPARE(server.errorString(), TEST_PROCESS_ENABLED ? "backend_unavailable" : "external_backend_disabled");
+#include <iostream>
+#include <stdexcept>
+#include <string>
+
+#define CHECK(expression) \
+    do { \
+        if (!(expression)) \
+            throw std::runtime_error(std::string(__FILE__) + ":" + \
+                                     std::to_string(__LINE__) + ": " + #expression); \
+    } while (false)
+
+namespace {
+void featureConfigurationMatchesLinkedArtifact()
+{
+    using namespace iiWebServer;
+    CHECK(!FileTransfer::backendVersion().isEmpty() == bool(TEST_CURL_ENABLED));
+    CHECK(!FileTransfer::protocols().isEmpty() == bool(TEST_CURL_ENABLED));
+    if (!TEST_CURL_ENABLED) {
+        FileTransfer transfer;
+        QEventLoop loop;
+        int count = 0;
+        QString error;
+        QObject::connect(&transfer, &FileTransfer::finished, &loop,
+                         [&](const QString&, const TransferResult& result) {
+                             ++count;
+                             error = result.error;
+                             loop.quit();
+                         });
+        QTimer::singleShot(5000, &loop, &QEventLoop::quit);
+        transfer.start({});
+        if (count == 0) loop.exec();
+        CHECK(count == 1);
+        CHECK(error == "backend_unavailable");
     }
-};
-QTEST_GUILESS_MAIN(OptionalBackendTests)
-#include "optional_backends.moc"
+    StorageBridgeOptions backend;
+    backend.executable = "/nonexistent/iiWebServer-fixture-rclone";
+    StorageBridge storage(backend);
+    QEventLoop loop;
+    int count = 0;
+    QString error;
+    QObject::connect(&storage, &StorageBridge::finished, &loop,
+                     [&](const QString&, const StorageResult& result) {
+                         ++count;
+                         error = result.error;
+                         loop.quit();
+                     });
+    QTimer::singleShot(5000, &loop, &QEventLoop::quit);
+    storage.start({StorageOperation::Providers});
+    if (count == 0) loop.exec();
+    CHECK(count == 1);
+    CHECK(error == (TEST_PROCESS_ENABLED ? "backend_unavailable" : "external_backend_disabled"));
+    FileProtocolServer server(backend);
+    CHECK(!server.start({}));
+    CHECK(server.errorString() == (TEST_PROCESS_ENABLED ? "backend_unavailable" : "external_backend_disabled"));
+}
+} // namespace
+
+int main(int argc, char** argv)
+{
+    QCoreApplication application(argc, argv);
+    try {
+        featureConfigurationMatchesLinkedArtifact();
+        return 0;
+    } catch (const std::exception& error) {
+        std::cerr << "featureConfigurationMatchesLinkedArtifact: " << error.what() << '\n';
+        return 1;
+    }
+}

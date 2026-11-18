@@ -1,3 +1,7 @@
+#include "CTestSupport.h"
+#include "QtEventWait.h"
+#include "SignalRecorder.h"
+#include <QCoreApplication>
 #include "NetworkFixture.h"
 #include "TestPaths.h"
 #include <QJsonDocument>
@@ -6,10 +10,8 @@
 #include <QFile>
 #include <QJsonArray>
 #include <QPointer>
-#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTimer>
-#include <QTest>
 
 using namespace iiWebServer;
 namespace {
@@ -29,7 +31,7 @@ PeerOptions options(quint16 port, const QString &id, const QByteArray &token = "
     return o;
 }
 QJsonObject reply(Peer &client, const QString &target, const QJsonObject &payload, QString *route = nullptr) {
-    QSignalSpy done(&client, &Peer::completed);
+    web_test::SignalRecorder done(&client, &Peer::completed);
     const auto id = client.request(target, payload);
     QElapsedTimer time; time.start();
     while (time.elapsed() < 5000) {
@@ -37,220 +39,219 @@ QJsonObject reply(Peer &client, const QString &target, const QJsonObject &payloa
             if (route) *route = event[2].toString();
             return event[1].toJsonObject();
         }
-        QTest::qWait(5);
+        web_test::processFor(5);
     }
     return {{"error", "test_timeout"}};
 }
 }
 
 class HostingTests : public QObject {
-    Q_OBJECT
-private slots:
+public:
     void peerIdleDeadlineRetiresAfterRequest() {
-        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        RelayServer relay(accounts()); CTEST_CHECK(relay.listen(Address::loopback()));
         Peer peer; auto config = options(relay.port(), "idle-peer"); config.localEnabled = false;
-        QVERIFY(peer.start(config)); QTRY_VERIFY(peer.isReady());
+        CTEST_CHECK(peer.start(config)); CTEST_WAIT_DEFAULT(peer.isReady());
         auto *timer = peer.findChild<QTimer *>(QStringLiteral("Peer.deadline"), Qt::FindDirectChildrenOnly);
-        QVERIFY(timer); QVERIFY(timer->isSingleShot()); QVERIFY(!timer->isActive());
-        QSignalSpy completed(&peer, &Peer::completed);
-        const auto request = peer.request("missing-host", {}); QVERIFY(!request.isEmpty()); QVERIFY(timer->isActive());
-        QTRY_COMPARE(completed.size(), 1); QVERIFY(!timer->isActive());
+        CTEST_CHECK(timer); CTEST_CHECK(timer->isSingleShot()); CTEST_CHECK(!timer->isActive());
+        web_test::SignalRecorder completed(&peer, &Peer::completed);
+        const auto request = peer.request("missing-host", {}); CTEST_CHECK(!request.isEmpty()); CTEST_CHECK(timer->isActive());
+        CTEST_WAIT_COMPARE(completed.size(), 1); CTEST_CHECK(!timer->isActive());
     }
     void peerMayBeDestroyedByCompletion() {
-        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        RelayServer relay(accounts()); CTEST_CHECK(relay.listen(Address::loopback()));
         auto *peer = new Peer; QPointer<Peer> alive(peer);
         auto config = options(relay.port(), "retiring-peer"); config.localEnabled = false;
-        QVERIFY(peer->start(config)); QTRY_VERIFY(peer->isReady());
+        CTEST_CHECK(peer->start(config)); CTEST_WAIT_DEFAULT(peer->isReady());
         connect(peer, &Peer::completed, this, [peer] { delete peer; });
-        QVERIFY(!peer->request("missing-host", {}).isEmpty());
-        QTRY_VERIFY(alive.isNull());
+        CTEST_CHECK(!peer->request("missing-host", {}).isEmpty());
+        CTEST_WAIT_DEFAULT(alive.isNull());
     }
     void relayTracksOnlyLiveDeadlinesAndHeartbeats() {
-        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        RelayServer relay(accounts()); CTEST_CHECK(relay.listen(Address::loopback()));
         auto *deadline = relay.findChild<QTimer *>(QStringLiteral("RelayServer.deadline"), Qt::FindDirectChildrenOnly);
         auto *heartbeat = relay.findChild<QTimer *>(QStringLiteral("RelayServer.heartbeat"), Qt::FindDirectChildrenOnly);
-        QVERIFY(deadline); QVERIFY(deadline->isSingleShot()); QVERIFY(!deadline->isActive());
-        QVERIFY(heartbeat); QVERIFY(!heartbeat->isActive());
+        CTEST_CHECK(deadline); CTEST_CHECK(deadline->isSingleShot()); CTEST_CHECK(!deadline->isActive());
+        CTEST_CHECK(heartbeat); CTEST_CHECK(!heartbeat->isActive());
         Peer peer; auto config = options(relay.port(), "heartbeat-peer"); config.localEnabled = false;
-        QVERIFY(peer.start(config)); QTRY_VERIFY(peer.isReady());
-        QVERIFY(deadline->isActive()); QVERIFY(heartbeat->isActive());
-        peer.stop(); QTRY_VERIFY(!deadline->isActive() && !heartbeat->isActive());
+        CTEST_CHECK(peer.start(config)); CTEST_WAIT_DEFAULT(peer.isReady());
+        CTEST_CHECK(deadline->isActive()); CTEST_CHECK(heartbeat->isActive());
+        peer.stop(); CTEST_WAIT_DEFAULT(!deadline->isActive() && !heartbeat->isActive());
         Peer another; config.peerId = "stopping-peer";
-        QVERIFY(another.start(config)); QTRY_VERIFY(another.isReady());
-        QVERIFY(heartbeat->isActive()); relay.stop();
-        QVERIFY(!deadline->isActive() && !heartbeat->isActive());
+        CTEST_CHECK(another.start(config)); CTEST_WAIT_DEFAULT(another.isReady());
+        CTEST_CHECK(heartbeat->isActive()); relay.stop();
+        CTEST_CHECK(!deadline->isActive() && !heartbeat->isActive());
     }
     void reopeningCanDestroyTheSocketFromDisconnect() {
-        WebSocketServer server; QVERIFY(server.listen(Address::loopback(), 0, {}));
+        WebSocketServer server; CTEST_CHECK(server.listen(Address::loopback(), 0, {}));
         auto *socket = new WebSocket; QPointer<WebSocket> alive(socket);
         const QUrl endpoint(QString("ws://127.0.0.1:%1").arg(server.serverPort()));
         socket->open(endpoint);
-        QTRY_VERIFY(socket->state() == ii::network::SocketState::connected);
+        CTEST_WAIT_DEFAULT(socket->state() == ii::network::SocketState::connected);
         connect(socket, &WebSocket::disconnected, this, [socket] { delete socket; });
         socket->open(endpoint);
-        QVERIFY(alive.isNull());
+        CTEST_CHECK(alive.isNull());
     }
     void hostNameDialUsesReachableAddress() {
-        WebSocketServer server; QVERIFY(server.listen(Address::loopback(), 0, {}));
-        WebSocket socket; QSignalSpy connected(&socket, &WebSocket::connected);
+        WebSocketServer server; CTEST_CHECK(server.listen(Address::loopback(), 0, {}));
+        WebSocket socket; web_test::SignalRecorder connected(&socket, &WebSocket::connected);
         socket.open(QUrl(QString("ws://localhost:%1").arg(server.serverPort())));
-        QTRY_COMPARE_WITH_TIMEOUT(connected.size(), 1, 5000);
+        CTEST_WAIT_COMPARE_TIMEOUT(connected.size(), 1, 5000);
     }
     void cancelledQueuedOpenStaysClosed() {
-        WebSocketServer server; QVERIFY(server.listen(Address::loopback(), 0, {}));
-        WebSocket socket; QSignalSpy accepted(&server, &WebSocketServer::newConnection);
-        QSignalSpy connected(&socket, &WebSocket::connected);
+        WebSocketServer server; CTEST_CHECK(server.listen(Address::loopback(), 0, {}));
+        WebSocket socket; web_test::SignalRecorder accepted(&server, &WebSocketServer::newConnection);
+        web_test::SignalRecorder connected(&socket, &WebSocket::connected);
         socket.open(QUrl(QString("ws://127.0.0.1:%1").arg(server.serverPort())));
-        socket.abort(); QTest::qWait(100);
-        QCOMPARE(socket.state(), ii::network::SocketState::closed);
-        QCOMPARE(connected.size(), 0); QCOMPARE(accepted.size(), 0);
+        socket.abort(); web_test::processFor(100);
+        CTEST_COMPARE(socket.state(), ii::network::SocketState::closed);
+        CTEST_COMPARE(connected.size(), 0); CTEST_COMPARE(accepted.size(), 0);
     }
     void privatePresentationsDoNotConsumePublicPagination() {
-        QTemporaryDir root(testDirectory() + "/presentation-share-XXXXXX"); QVERIFY(root.isValid());
+        QTemporaryDir root(testDirectory() + "/presentation-share-XXXXXX"); CTEST_CHECK(root.isValid());
         for (int i = 0; i < 270; ++i) {
             QFile document(root.filePath(QString(".asset-%1.iisacc-preview").arg(i)));
-            QVERIFY(document.open(QIODevice::WriteOnly)); document.write("private derived fixture");
+            CTEST_CHECK(document.open(QIODevice::WriteOnly)); document.write("private derived fixture");
         }
         for (const auto &name : {"public.txt", ".public-hidden"}) {
-            QFile original(root.filePath(name)); QVERIFY(original.open(QIODevice::WriteOnly)); original.write("original");
+            QFile original(root.filePath(name)); CTEST_CHECK(original.open(QIODevice::WriteOnly)); original.write("original");
         }
         FileShare share(root.path());
         const auto listed = share.handle({{"op", "list"}, {"path", ""}});
-        QVERIFY(listed.value("ok").toBool()); QCOMPARE(listed.value("entries").toArray().size(), 2);
-        QVERIFY(listed.value("nextCursor").toString().isEmpty());
-        QVERIFY(!share.handle({{"op", "stat"}, {"path", ".asset-0.iisacc-preview"}}).value("ok").toBool());
-        QVERIFY(!share.handle({{"op", "write"}, {"path", "public.txt.iisacc.json"}, {"data", ""}}).value("ok").toBool());
-        QVERIFY(share.handle({{"op", "stat"}, {"path", "public.txt"}}).value("ok").toBool());
-        QVERIFY(share.handle({{"op", "write"}, {"path", "uploaded.txt"}, {"data", "cHVibGlzaGVk"}}).value("ok").toBool());
-        QVERIFY(iiFileProvider::native::Presentation::waitForIdle(std::chrono::seconds(15)));
+        CTEST_CHECK(listed.value("ok").toBool()); CTEST_COMPARE(listed.value("entries").toArray().size(), 2);
+        CTEST_CHECK(listed.value("nextCursor").toString().isEmpty());
+        CTEST_CHECK(!share.handle({{"op", "stat"}, {"path", ".asset-0.iisacc-preview"}}).value("ok").toBool());
+        CTEST_CHECK(!share.handle({{"op", "write"}, {"path", "public.txt.iisacc.json"}, {"data", ""}}).value("ok").toBool());
+        CTEST_CHECK(share.handle({{"op", "stat"}, {"path", "public.txt"}}).value("ok").toBool());
+        CTEST_CHECK(share.handle({{"op", "write"}, {"path", "uploaded.txt"}, {"data", "cHVibGlzaGVk"}}).value("ok").toBool());
+        CTEST_CHECK(iiFileProvider::native::Presentation::waitForIdle(std::chrono::seconds(15)));
         const auto uploaded = iiFileProvider::native::Presentation::load(std::filesystem::path(root.filePath("uploaded.txt").toStdU16String()));
-        QVERIFY(uploaded); QCOMPARE(uploaded->details.size, std::uint64_t(9));
+        CTEST_CHECK(uploaded); CTEST_COMPARE(uploaded->details.size, std::uint64_t(9));
     }
     void localFirstAndSameAccountOnly() {
-        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        RelayServer relay(accounts()); CTEST_CHECK(relay.listen(Address::loopback()));
         Peer host, client, stranger;
-        QVERIFY(host.start(options(relay.port(), "host"), [](const auto &sender, const auto &p) {
+        CTEST_CHECK(host.start(options(relay.port(), "host"), [](const auto &sender, const auto &p) {
             return QJsonObject{{"ok", true}, {"sender", sender}, {"echo", p}};
         }));
-        QVERIFY(client.start(options(relay.port(), "client")));
-        QVERIFY(stranger.start(options(relay.port(), "stranger", "bob")));
-        QTRY_VERIFY(host.isReady() && client.isReady() && stranger.isReady());
-        QTRY_COMPARE(client.peers().size(), 1);
-        QCOMPARE(stranger.peers().size(), 0);
+        CTEST_CHECK(client.start(options(relay.port(), "client")));
+        CTEST_CHECK(stranger.start(options(relay.port(), "stranger", "bob")));
+        CTEST_WAIT_DEFAULT(host.isReady() && client.isReady() && stranger.isReady());
+        CTEST_WAIT_COMPARE(client.peers().size(), 1);
+        CTEST_COMPARE(stranger.peers().size(), 0);
         QString route;
         auto result = reply(client, "host", {{"value", "nearby"}}, &route);
-        QCOMPARE(result.value("sender").toString(), "client");
-        QCOMPARE(result.value("echo").toObject().value("value").toString(), "nearby");
-        QCOMPARE(route, "local");
-        QVERIFY(!reply(stranger, "host", {}).value("ok").toBool());
+        CTEST_COMPARE(result.value("sender").toString(), "client");
+        CTEST_COMPARE(result.value("echo").toObject().value("value").toString(), "nearby");
+        CTEST_COMPARE(route, "local");
+        CTEST_CHECK(!reply(stranger, "host", {}).value("ok").toBool());
     }
     void remoteRelayAndUnreachableLanFallback() {
-        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        RelayServer relay(accounts()); CTEST_CHECK(relay.listen(Address::loopback()));
         for (bool local : {false, true}) {
             Peer host, client;
             auto o = options(relay.port(), "host"); o.localEnabled = local;
             // A deliberately unavailable loopback address makes the local path fail.
             o.localAddresses = {"127.0.0.2"};
-            QVERIFY(host.start(o, [](const auto &, const auto &) { return QJsonObject{{"ok", true}, {"data", "remote"}}; }));
-            QVERIFY(client.start(options(relay.port(), "client")));
-            QTRY_VERIFY(host.isReady() && client.isReady());
-            QTRY_COMPARE(client.peers().size(), 1);
+            CTEST_CHECK(host.start(o, [](const auto &, const auto &) { return QJsonObject{{"ok", true}, {"data", "remote"}}; }));
+            CTEST_CHECK(client.start(options(relay.port(), "client")));
+            CTEST_WAIT_DEFAULT(host.isReady() && client.isReady());
+            CTEST_WAIT_COMPARE(client.peers().size(), 1);
             QString route;
-            QCOMPARE(reply(client, "host", {}, &route).value("data").toString(), "remote");
-            QCOMPARE(route, "remote");
+            CTEST_COMPARE(reply(client, "host", {}, &route).value("data").toString(), "remote");
+            CTEST_COMPARE(route, "remote");
         }
     }
     void rejectsCredentialsAndUnsafeTransport() {
-        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        RelayServer relay(accounts()); CTEST_CHECK(relay.listen(Address::loopback()));
         Peer p;
         auto o = options(relay.port(), "invalid", "invalid");
-        QVERIFY(p.start(o));
-        QTRY_VERIFY(!p.errorString().isEmpty());
-        QVERIFY(!p.isReady());
+        CTEST_CHECK(p.start(o));
+        CTEST_WAIT_DEFAULT(!p.errorString().isEmpty());
+        CTEST_CHECK(!p.isReady());
         o.relayUrl = QUrl("ws://192.168.1.1:5000");
-        QVERIFY(!p.start(o));
+        CTEST_CHECK(!p.start(o));
         RelayServer unsafe(accounts());
-        QVERIFY(!unsafe.listen(Address::any()));
+        CTEST_CHECK(!unsafe.listen(Address::any()));
         o = options(relay.port(), "unsafe"); o.listenAddress = Address::any();
-        QVERIFY(!p.start(o));
+        CTEST_CHECK(!p.start(o));
     }
     void expiredAuthorityAndStoppedHostDisappear() {
         bool valid = true;
         RelayServer relay([&](const auto &, AuthCompletion done) {
             done({valid ? "alice" : QString(), QDateTime::currentDateTimeUtc().addMSecs(800)});
         });
-        QVERIFY(relay.listen(Address::loopback()));
+        CTEST_CHECK(relay.listen(Address::loopback()));
         Peer host, client;
-        QVERIFY(host.start(options(relay.port(), "host")));
-        QVERIFY(client.start(options(relay.port(), "client")));
-        QTRY_VERIFY(host.isReady() && client.isReady());
-        QTRY_COMPARE(client.peers().size(), 1);
+        CTEST_CHECK(host.start(options(relay.port(), "host")));
+        CTEST_CHECK(client.start(options(relay.port(), "client")));
+        CTEST_WAIT_DEFAULT(host.isReady() && client.isReady());
+        CTEST_WAIT_COMPARE(client.peers().size(), 1);
         host.stop();
-        QTRY_COMPARE(client.peers().size(), 0);
+        CTEST_WAIT_COMPARE(client.peers().size(), 0);
         valid = false;
-        QTRY_VERIFY_WITH_TIMEOUT(!client.isReady(), 2000);
+        CTEST_WAIT_VERIFY(!client.isReady(), 2000);
     }
     void localListenerRejectsUnauthenticatedRequests() {
-        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback()));
+        RelayServer relay(accounts()); CTEST_CHECK(relay.listen(Address::loopback()));
         Peer host; int calls = 0;
-        QVERIFY(host.start(options(relay.port(), "host"), [&](const auto &, const auto &) { ++calls; return QJsonObject{{"ok", true}}; }));
-        QTRY_VERIFY(host.isReady());
+        CTEST_CHECK(host.start(options(relay.port(), "host"), [&](const auto &, const auto &) { ++calls; return QJsonObject{{"ok", true}}; }));
+        CTEST_WAIT_DEFAULT(host.isReady());
         WebSocket attack;
         connect(&attack, &WebSocket::connected, &attack, [&] {
             attack.sendTextMessage(R"({"type":"request","id":"attack","payload":{"op":"read","path":"secret"}})");
         });
         attack.open(QUrl(QString("ws://127.0.0.1:%1").arg(host.localPort())));
-        QTest::qWait(200);
-        QCOMPARE(calls, 0);
-        QVERIFY(attack.state() == ii::network::SocketState::closed || attack.state() == ii::network::SocketState::failed);
+        web_test::processFor(200);
+        CTEST_COMPARE(calls, 0);
+        CTEST_CHECK(attack.state() == ii::network::SocketState::closed || attack.state() == ii::network::SocketState::failed);
     }
     void filesAreBoundedAndConfined() {
         QTemporaryDir root(testDirectory() + "/share-XXXXXX"), outside(testDirectory() + "/outside-XXXXXX");
-        QVERIFY(root.isValid() && outside.isValid());
+        CTEST_CHECK(root.isValid() && outside.isValid());
         FileShare share(root.path());
         const QByteArray data(700000, 'x');
-        QFile file(root.filePath("large.bin")); QVERIFY(file.open(QIODevice::WriteOnly));
-        QCOMPARE(file.write(data), data.size()); file.close();
+        QFile file(root.filePath("large.bin")); CTEST_CHECK(file.open(QIODevice::WriteOnly));
+        CTEST_COMPARE(file.write(data), data.size()); file.close();
         QByteArray received;
         while (received.size() < data.size()) {
             auto result = share.handle({{"op", "read"}, {"path", "large.bin"}, {"offset", QString::number(received.size())}});
-            QVERIFY(result.value("ok").toBool());
+            CTEST_CHECK(result.value("ok").toBool());
             auto chunk = QByteArray::fromBase64(result.value("data").toString().toLatin1());
-            QVERIFY(chunk.size() <= FileShare::ChunkBytes); QVERIFY(!chunk.isEmpty()); received += chunk;
+            CTEST_CHECK(chunk.size() <= FileShare::ChunkBytes); CTEST_CHECK(!chunk.isEmpty()); received += chunk;
         }
-        QCOMPARE(received, data);
+        CTEST_COMPARE(received, data);
         const auto oldVersion = share.handle({{"op", "stat"}, {"path", "large.bin"}}).value("version");
-        QVERIFY(file.open(QIODevice::Append)); file.write("changed"); file.close();
-        QCOMPARE(share.handle({{"op", "read"}, {"path", "large.bin"}, {"version", oldVersion}}).value("error").toString(), "file_changed");
+        CTEST_CHECK(file.open(QIODevice::Append)); file.write("changed"); file.close();
+        CTEST_COMPARE(share.handle({{"op", "read"}, {"path", "large.bin"}, {"version", oldVersion}}).value("error").toString(), "file_changed");
         for (const QString &path : {"../secret", "/etc/passwd", "./large.bin", "a//b", "a\\b", "a:b"})
-            QVERIFY(!share.handle({{"op", "read"}, {"path", path}}).value("ok").toBool());
-        QVERIFY(QFile::link(outside.path(), root.filePath("link")));
-        QVERIFY(!share.handle({{"op", "list"}, {"path", "link"}}).value("ok").toBool());
-        QVERIFY(share.handle({{"op", "write"}, {"path", "new.txt"}, {"data", "aGVsbG8="}}).value("ok").toBool());
-        QVERIFY(!share.handle({{"op", "write"}, {"path", "new.txt"}, {"data", "Y2hhbmdlZA=="}}).value("ok").toBool());
-        QCOMPARE(share.handle({{"op", "read"}, {"path", "new.txt"}}).value("data").toString(), "aGVsbG8=");
-        QVERIFY(share.handle({{"op", "mkdir"}, {"path", QString::fromUtf8("자료")}}).value("ok").toBool());
-        QVERIFY(share.handle({{"op", "write"}, {"path", QString::fromUtf8("자료/내용.txt")}, {"data", "aGVsbG8="}}).value("ok").toBool());
-        QCOMPARE(share.handle({{"op", "read"}, {"path", QString::fromUtf8("자료/내용.txt")}}).value("data").toString(), "aGVsbG8=");
+            CTEST_CHECK(!share.handle({{"op", "read"}, {"path", path}}).value("ok").toBool());
+        CTEST_CHECK(QFile::link(outside.path(), root.filePath("link")));
+        CTEST_CHECK(!share.handle({{"op", "list"}, {"path", "link"}}).value("ok").toBool());
+        CTEST_CHECK(share.handle({{"op", "write"}, {"path", "new.txt"}, {"data", "aGVsbG8="}}).value("ok").toBool());
+        CTEST_CHECK(!share.handle({{"op", "write"}, {"path", "new.txt"}, {"data", "Y2hhbmdlZA=="}}).value("ok").toBool());
+        CTEST_COMPARE(share.handle({{"op", "read"}, {"path", "new.txt"}}).value("data").toString(), "aGVsbG8=");
+        CTEST_CHECK(share.handle({{"op", "mkdir"}, {"path", QString::fromUtf8("자료")}}).value("ok").toBool());
+        CTEST_CHECK(share.handle({{"op", "write"}, {"path", QString::fromUtf8("자료/내용.txt")}, {"data", "aGVsbG8="}}).value("ok").toBool());
+        CTEST_COMPARE(share.handle({{"op", "read"}, {"path", QString::fromUtf8("자료/내용.txt")}}).value("data").toString(), "aGVsbG8=");
         const auto listed = share.handle({{"op", "list"}, {"path", QString::fromUtf8("자료")}});
-        QVERIFY(listed.value("ok").toBool()); QCOMPARE(listed.value("entries").toArray().size(), 1);
-        QFile lease(root.filePath(".iisacc-temporary.lock")); QVERIFY(lease.open(QIODevice::WriteOnly)); lease.close();
-        QFile nestedLease(root.filePath(QString::fromUtf8("자료/.iisacc-temporary.lock"))); QVERIFY(nestedLease.open(QIODevice::WriteOnly)); nestedLease.close();
+        CTEST_CHECK(listed.value("ok").toBool()); CTEST_COMPARE(listed.value("entries").toArray().size(), 1);
+        QFile lease(root.filePath(".iisacc-temporary.lock")); CTEST_CHECK(lease.open(QIODevice::WriteOnly)); lease.close();
+        QFile nestedLease(root.filePath(QString::fromUtf8("자료/.iisacc-temporary.lock"))); CTEST_CHECK(nestedLease.open(QIODevice::WriteOnly)); nestedLease.close();
         for (const auto &entry : share.handle({{"op", "list"}}).value("entries").toArray())
-            QVERIFY(entry.toObject().value("name") != ".iisacc-temporary.lock");
-        QCOMPARE(share.handle({{"op", "list"}, {"path", QString::fromUtf8("자료")}}).value("entries").toArray().size(), 1);
+            CTEST_CHECK(entry.toObject().value("name") != ".iisacc-temporary.lock");
+        CTEST_COMPARE(share.handle({{"op", "list"}, {"path", QString::fromUtf8("자료")}}).value("entries").toArray().size(), 1);
         for (const auto &reserved : {QString(".iisacc-temporary.lock"), QString::fromUtf8("자료/.iisacc-temporary.lock")})
             for (const auto &operation : {"read", "stat", "write", "mkdir", "remove"})
-                QVERIFY(!share.handle({{"op", operation}, {"path", reserved}, {"data", "aGVsbG8="}}).value("ok").toBool());
-        QVERIFY(QFileInfo::exists(lease.fileName()) && QFileInfo(lease.fileName()).size() == 0);
-        QVERIFY(QFileInfo::exists(nestedLease.fileName()) && QFileInfo(nestedLease.fileName()).size() == 0);
+                CTEST_CHECK(!share.handle({{"op", operation}, {"path", reserved}, {"data", "aGVsbG8="}}).value("ok").toBool());
+        CTEST_CHECK(QFileInfo::exists(lease.fileName()) && QFileInfo(lease.fileName()).size() == 0);
+        CTEST_CHECK(QFileInfo::exists(nestedLease.fileName()) && QFileInfo(nestedLease.fileName()).size() == 0);
         bool available = false;
         FileShare guarded(root.path(), [&] { return available; });
-        QVERIFY(!guarded.handle({{"op", "list"}}).value("ok").toBool());
-        QVERIFY(!share.handle({{"op", "read"}, {"path", "large.bin"}, {"offset", "-1"}}).value("ok").toBool());
+        CTEST_CHECK(!guarded.handle({{"op", "list"}}).value("ok").toBool());
+        CTEST_CHECK(!share.handle({{"op", "read"}, {"path", "large.bin"}, {"offset", "-1"}}).value("ok").toBool());
     }
     void sessionVerifierIsolatesCookiesAndRejectsRedirect() {
-        TestTcpServer http; QVERIFY(http.listen(Address::loopback()));
+        TestTcpServer http; CTEST_CHECK(http.listen(Address::loopback()));
         QList<QByteArray> seen;
         connect(&http, &TestTcpServer::newConnection, &http, [&] {
             auto *s = http.nextPendingConnection();
@@ -272,43 +273,83 @@ private slots:
         SessionAuthenticator auth(QUrl(QString("http://127.0.0.1:%1/Account/GraphQL").arg(http.serverPort())));
         QList<Principal> verified;
         auth.authenticate("alice", [&](Principal p) { verified.append(p); });
-        QTRY_COMPARE(verified.size(), 1);
-        QCOMPARE(verified[0].accountId, "verified-alice");
-        QVERIFY(seen[0].startsWith("POST /Account/GraphQL "));
+        CTEST_WAIT_COMPARE(verified.size(), 1);
+        CTEST_COMPARE(verified[0].accountId, "verified-alice");
+        CTEST_CHECK(seen[0].startsWith("POST /Account/GraphQL "));
         const auto input = QJsonDocument::fromJson(seen[0].mid(seen[0].indexOf("\r\n\r\n") + 4)).object();
-        QCOMPARE(input.value("query").toString(), QString("query AccountSession { accountSession { account { sub } } }"));
+        CTEST_COMPARE(input.value("query").toString(), QString("query AccountSession { accountSession { account { sub } } }"));
         auth.authenticate("bob", [&](Principal p) { verified.append(p); });
-        QTRY_COMPARE(verified.size(), 2);
-        QVERIFY(verified[1].accountId.isEmpty());
-        QVERIFY(!seen[1].contains("injected"));
+        CTEST_WAIT_COMPARE(verified.size(), 2);
+        CTEST_CHECK(verified[1].accountId.isEmpty());
+        CTEST_CHECK(!seen[1].contains("injected"));
         auth.authenticate("redirect", [&](Principal p) { verified.append(p); });
-        QTRY_COMPARE(verified.size(), 3);
-        QVERIFY(verified[2].accountId.isEmpty());
-        QCOMPARE(seen.size(), 3);
+        CTEST_WAIT_COMPARE(verified.size(), 3);
+        CTEST_CHECK(verified[2].accountId.isEmpty());
+        CTEST_COMPARE(seen.size(), 3);
         auth.authenticate("partial", [&](Principal p) { verified.append(p); });
-        QTRY_COMPARE(verified.size(), 4);
-        QVERIFY(verified[3].accountId.isEmpty());
+        CTEST_WAIT_COMPARE(verified.size(), 4);
+        CTEST_CHECK(verified[3].accountId.isEmpty());
     }
     void tlsLocalPinAndRelayTrust() {
         TlsConfiguration tls;
         tls.policy.identity.certificate_chain_file = (testDirectory() + "/test-cert.pem").toStdString();
         tls.policy.identity.private_key_file = (testDirectory() + "/test-key.pem").toStdString();
-        RelayServer relay(accounts()); QVERIFY(relay.listen(Address::loopback(), 0, tls));
+        RelayServer relay(accounts()); CTEST_CHECK(relay.listen(Address::loopback(), 0, tls));
         auto o = options(relay.port(), "host"); o.relayUrl.setScheme("wss");
         Peer untrusted;
-        QVERIFY(untrusted.start(o));
-        QTRY_VERIFY(!untrusted.errorString().isEmpty()); QVERIFY(!untrusted.isReady()); untrusted.stop();
+        CTEST_CHECK(untrusted.start(o));
+        CTEST_WAIT_DEFAULT(!untrusted.errorString().isEmpty()); CTEST_CHECK(!untrusted.isReady()); untrusted.stop();
         o.relayTls.policy.ca_file = (testDirectory() + "/test-ca.pem").toStdString(); o.localTls = tls;
         Peer host, client;
-        QVERIFY(host.start(o, [](const auto &, const auto &) { return QJsonObject{{"ok", true}, {"tls", true}}; }));
+        CTEST_CHECK(host.start(o, [](const auto &, const auto &) { return QJsonObject{{"ok", true}, {"tls", true}}; }));
         o.peerId = "client"; o.hostFiles = false;
-        QVERIFY(client.start(o));
-        QTRY_VERIFY2(host.isReady() && client.isReady(), qPrintable(host.errorString() + " / " + client.errorString()));
-        QTRY_COMPARE(client.peers().size(), 1);
+        CTEST_CHECK(client.start(o));
+        CTEST_WAIT_MESSAGE_DEFAULT(host.isReady() && client.isReady(), qPrintable(host.errorString() + " / " + client.errorString()));
+        CTEST_WAIT_COMPARE(client.peers().size(), 1);
         QString route;
-        QVERIFY(reply(client, "host", {}, &route).value("tls").toBool());
-        QCOMPARE(route, "local");
+        CTEST_CHECK(reply(client, "host", {}, &route).value("tls").toBool());
+        CTEST_COMPARE(route, "local");
     }
 };
-QTEST_GUILESS_MAIN(HostingTests)
-#include "hosting.moc"
+int main(int argc, char** argv)
+{
+    QCoreApplication application(argc, argv);
+    if (argc > 2) {
+        std::cerr << "Expected a case name or --offline" << std::endl;
+        return 1;
+    }
+    const std::string_view selection = argc == 2 ? argv[1] : "";
+    const bool offline = selection == "--offline";
+    web_test::CTestRunner runner(offline ? std::string_view{} : selection);
+    HostingTests tests;
+    if (!offline)
+        runner.run("peerIdleDeadlineRetiresAfterRequest", [&] { tests.peerIdleDeadlineRetiresAfterRequest(); });
+    if (!offline)
+        runner.run("peerMayBeDestroyedByCompletion", [&] { tests.peerMayBeDestroyedByCompletion(); });
+    if (!offline)
+        runner.run("relayTracksOnlyLiveDeadlinesAndHeartbeats", [&] { tests.relayTracksOnlyLiveDeadlinesAndHeartbeats(); });
+    if (!offline)
+        runner.run("reopeningCanDestroyTheSocketFromDisconnect", [&] { tests.reopeningCanDestroyTheSocketFromDisconnect(); });
+    if (!offline)
+        runner.run("hostNameDialUsesReachableAddress", [&] { tests.hostNameDialUsesReachableAddress(); });
+    if (!offline)
+        runner.run("cancelledQueuedOpenStaysClosed", [&] { tests.cancelledQueuedOpenStaysClosed(); });
+    if (!offline)
+        runner.run("privatePresentationsDoNotConsumePublicPagination", [&] { tests.privatePresentationsDoNotConsumePublicPagination(); });
+    if (!offline)
+        runner.run("localFirstAndSameAccountOnly", [&] { tests.localFirstAndSameAccountOnly(); });
+    if (!offline)
+        runner.run("remoteRelayAndUnreachableLanFallback", [&] { tests.remoteRelayAndUnreachableLanFallback(); });
+    if (!offline)
+        runner.run("rejectsCredentialsAndUnsafeTransport", [&] { tests.rejectsCredentialsAndUnsafeTransport(); });
+    if (!offline)
+        runner.run("expiredAuthorityAndStoppedHostDisappear", [&] { tests.expiredAuthorityAndStoppedHostDisappear(); });
+    if (!offline)
+        runner.run("localListenerRejectsUnauthenticatedRequests", [&] { tests.localListenerRejectsUnauthenticatedRequests(); });
+    runner.run("filesAreBoundedAndConfined", [&] { tests.filesAreBoundedAndConfined(); });
+    if (!offline)
+        runner.run("sessionVerifierIsolatesCookiesAndRejectsRedirect", [&] { tests.sessionVerifierIsolatesCookiesAndRejectsRedirect(); });
+    if (!offline)
+        runner.run("tlsLocalPinAndRelayTrust", [&] { tests.tlsLocalPinAndRelayTrust(); });
+    return runner.result();
+}

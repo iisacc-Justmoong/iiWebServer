@@ -15,9 +15,9 @@ and the [Nginx configuration](deploy/nginx/iiwebserver.conf).
 
 [Windows build and execution](docs/WindowsBuildAndRun.md)
 
-Package release: **0.6.1** (2026-10-19). This patch packages the current
-source snapshot; build, test and installation evidence is recorded in the SDK
-patch-release report. Earlier versioned feature notes remain historical.
+Package version: **0.6.2**. The 0.6.1 patch-release report and earlier
+feature notes are historical; the compatibility component now requires
+iiNetwork 0.6.1 and iiJson 0.1.2 built together.
 
 The current working tree uses the renamed iiWebServer package and iiNetwork
 transport. See [network migration and current verification](docs/Network.md);
@@ -67,7 +67,7 @@ The SDK does not own Bonjour/NSD or account login. The Society app is responsibl
 
 After checking the Files list and completing the client confirm, send `paired` to both sides and allow `request()`. Cancel, expire, reuse, and other fingerprints are rejected. The connection key is stored in memory only and reconnected with a new QR after disconnection. Completed connections are not terminated via `cancelPairing()`. `stop()` closes the listener, connection, and pending requests. The SDK's existing RelayServer /Peer and version 1 PairingLink are maintained as native consumer compatible APIs.
 
-The host is built only on desktop platforms. iOS/Android reject `startHost()` and include only the client. TCP, TLS, WebSocket framing, HTTP authentication and interface discovery use iiNetwork 0.5 or later. The existing QObject/JSON API remains a Qt Core boundary for GUI consumers. Desktop platforms use OpenSSL to generate temporary RSA-2048 identities, passed to iiNetwork as in-memory PEM. Private keys are not written to files or imported into a system keychain. OpenSSL notices are provided in `ThirdParty/OpenSSL-LICENSE.txt` and installed under `share/iiWebServer/licenses/`.
+The host is built only on desktop platforms. iOS/Android reject `startHost()` and include only the client. TCP, TLS, WebSocket framing, HTTP authentication and interface discovery use iiNetwork 0.6.1 or later. The existing QObject/JSON API remains a Qt Core boundary for GUI consumers. Desktop platforms use OpenSSL to generate temporary RSA-2048 identities, passed to iiNetwork as in-memory PEM. Private keys are not written to files or imported into a system keychain. OpenSSL notices are provided in `ThirdParty/OpenSSL-LICENSE.txt` and installed under `share/iiWebServer/licenses/`.
 
 QR addresses permit only RFC 1918 IPv4 and explicitly specified test loopback. Automatic discovery enumerates native active, non-loopback interfaces and advertises private IPv4 addresses. Public addresses, DNS and link-local metadata addresses are rejected. It attempts at most 8 addresses in order, with no internet fallback. IPv6-only LANs are unsupported. The host applies TLS, a 1 MiB message limit, a4 MiB outbound-queue limit, and a limit of 8 connections. The client limits concurrent requests to 32.
 
@@ -198,7 +198,7 @@ explicit checks, not extra default build trees. The install target is
 
 ## Dependency Review
 
-The SDK requires C++23, iiNetwork 0.5+, iiSDKCore, iiJson, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.
+The compatibility SDK requires C++23, iiNetwork 0.6.1+, iiJson 0.1.2+, iiSDKCore, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. The HTTP-only component retains its iiNetwork 0.5+ requirement. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.
 
 `Address` is `ii::network::IpAddress`; use `Address::parse()`, `Address::loopback()` or `Address::any()`. `TlsConfiguration` is `ii::network::TlsOptions`; configure `policy.identity` and `policy.ca_file` directly. LAN pins use iiNetwork's explicit `trusted_certificate_sha256` policy, with certificate validity and purpose checks retained. See [network implementation and consumer migration](docs/Network.md).
 

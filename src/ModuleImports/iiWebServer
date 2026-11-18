@@ -1,0 +1,20 @@
+#pragma once
+
+// C++ public entry for iiWebServer; the linked components select the API.
+
+#if defined(IISDK_IMPORT_IIWEBSERVER_CORE)
+#include <NetworkTypes.h>
+#include <NetworkTransport.h>
+#include <iiWebServer.h>
+#include <WebServer.h>
+#include <PairingLink.h>
+#include <LanPeer.h>
+#include <Transfer.h>
+#include <StorageBridge.h>
+#include <iiWebServerExport.h>
+#endif
+
+#if defined(IISDK_IMPORT_IIWEBSERVER_HTTP)
+#include <iiWebServer/HttpServer.h>
+#include <iiWebServer/HttpExport.h>
+#endif
