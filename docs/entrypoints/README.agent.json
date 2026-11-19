@@ -10,8 +10,8 @@
   },
   "source": {
     "path": "README.md",
-    "sha256": "15c1463276ff40516c807b0408320ebc91b5b577ec5cfa85bbc9f15918ae6437",
-    "bytes": 22057,
+    "sha256": "a005282f8ed7688d61fd97e4c1b9c23fa4bfae6a7383475bb1fa28eea8c0d2b1",
+    "bytes": 22120,
     "line_count": 232,
     "encoding": "utf-8",
     "language": "ko"
@@ -85,7 +85,7 @@
       "kind": "paragraph",
       "start_line": 18,
       "end_line": 20,
-      "raw": "Package release: **0.6.1** (2026-10-19). This patch packages the current\nsource snapshot; build, test and installation evidence is recorded in the SDK\npatch-release report. Earlier versioned feature notes remain historical.\n"
+      "raw": "Package version: **0.6.2**. The 0.6.1 patch-release report and earlier\nfeature notes are historical; the compatibility component now requires\niiNetwork 0.6.1 and iiJson 0.1.2 built together.\n"
     },
     {
       "id": "b000010",
@@ -375,7 +375,7 @@
       "kind": "paragraph",
       "start_line": 70,
       "end_line": 70,
-      "raw": "The host is built only on desktop platforms. iOS/Android reject `startHost()` and include only the client. TCP, TLS, WebSocket framing, HTTP authentication and interface discovery use iiNetwork 0.5 or later. The existing QObject/JSON API remains a Qt Core boundary for GUI consumers. Desktop platforms use OpenSSL to generate temporary RSA-2048 identities, passed to iiNetwork as in-memory PEM. Private keys are not written to files or imported into a system keychain. OpenSSL notices are provided in `ThirdParty/OpenSSL-LICENSE.txt` and installed under `share/iiWebServer/licenses/`.\n"
+      "raw": "The host is built only on desktop platforms. iOS/Android reject `startHost()` and include only the client. TCP, TLS, WebSocket framing, HTTP authentication and interface discovery use iiNetwork 0.6.1 or later. The existing QObject/JSON API remains a Qt Core boundary for GUI consumers. Desktop platforms use OpenSSL to generate temporary RSA-2048 identities, passed to iiNetwork as in-memory PEM. Private keys are not written to files or imported into a system keychain. OpenSSL notices are provided in `ThirdParty/OpenSSL-LICENSE.txt` and installed under `share/iiWebServer/licenses/`.\n"
     },
     {
       "id": "b000050",
@@ -1010,7 +1010,7 @@
       "kind": "paragraph",
       "start_line": 201,
       "end_line": 201,
-      "raw": "The SDK requires C++23, iiNetwork 0.5+, iiSDKCore, iiJson, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.\n"
+      "raw": "The compatibility SDK requires C++23, iiNetwork 0.6.1+, iiJson 0.1.2+, iiSDKCore, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. The HTTP-only component retains its iiNetwork 0.5+ requirement. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.\n"
     },
     {
       "id": "b000126",
@@ -1068,7 +1068,7 @@
       "kind": "paragraph",
       "start_line": 209,
       "end_line": 209,
-      "raw": "SPDX-License-Identifier: MIT. Its own code follows [LICENSE](LICENSE). It does not replace the separate licenses of external libraries such as Qt.\n"
+      "raw": "SPDX-License-Identifier: Apache-2.0. Its own code follows [LICENSE](LICENSE). It does not replace the separate licenses of external libraries such as Qt.\n"
     },
     {
       "id": "b000134",
@@ -1445,7 +1445,7 @@
       {
         "block_id": "b000125",
         "line": 201,
-        "text": "The SDK requires C++23, iiNetwork 0.5+, iiSDKCore, iiJson, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.",
+        "text": "The compatibility SDK requires C++23, iiNetwork 0.6.1+, iiJson 0.1.2+, iiSDKCore, iiFileProvider and Qt 6.8.3 Core for its GUI-facing QObject/JSON contract. The HTTP-only component retains its iiNetwork 0.5+ requirement. Qt Network and Qt WebSockets are not dependencies. Native sockets, TLS validation and RFC 6455 framing are owned by iiNetwork; the Qt adapter only forwards events on the owning GUI thread. No paid service is required.",
         "basis": "lexical_match",
         "context": "paragraph"
       }
